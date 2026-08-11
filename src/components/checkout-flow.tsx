@@ -255,6 +255,41 @@ export function CheckoutFlow() {
     }
   };
 
+  // 🔴 The receipt is checked FIRST, before any cart-state guard.
+  //
+  // A paid order empties the cart by design, so every guard below is true at the
+  // exact moment the customer has succeeded. Ordering this after them showed
+  // "CHECKOUT_BLOCKED / NO ORDER PAYLOAD" to somebody whose card had just been
+  // charged, which reads as a failed payment. Observed on the first real
+  // purchase, 2026-08-11.
+  if (completedOrder) {
+    return (
+      <section className="order-receipt">
+        <p>% order commit --confirmed</p>
+        <h2>ORDER RECEIVED.</h2>
+        <dl>
+          <div>
+            <dt>ORDER</dt>
+            <dd>{completedOrder.number}</dd>
+          </div>
+          <div>
+            <dt>STATUS</dt>
+            <dd>{completedOrder.status.toUpperCase()}</dd>
+          </div>
+          <div>
+            <dt>TOTAL</dt>
+            <dd>
+              ${money(completedOrder.totalCents)} {completedOrder.currency}
+            </dd>
+          </div>
+        </dl>
+        <a className="cursor-pointer" href="/account/orders">
+          VIEW ORDER LOG
+        </a>
+      </section>
+    );
+  }
+
   if (availableItems.length === 0) {
     return (
       <section className="empty-state">
@@ -279,34 +314,6 @@ export function CheckoutFlow() {
         </p>
         <a className="cursor-pointer" href="/cart">
           REVIEW CART
-        </a>
-      </section>
-    );
-  }
-
-  if (completedOrder) {
-    return (
-      <section className="order-receipt">
-        <p>% order commit --confirmed</p>
-        <h2>ORDER RECEIVED.</h2>
-        <dl>
-          <div>
-            <dt>ORDER</dt>
-            <dd>{completedOrder.number}</dd>
-          </div>
-          <div>
-            <dt>STATUS</dt>
-            <dd>{completedOrder.status.toUpperCase()}</dd>
-          </div>
-          <div>
-            <dt>TOTAL</dt>
-            <dd>
-              ${money(completedOrder.totalCents)} {completedOrder.currency}
-            </dd>
-          </div>
-        </dl>
-        <a className="cursor-pointer" href="/account/orders">
-          VIEW ORDER LOG
         </a>
       </section>
     );

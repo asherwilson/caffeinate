@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+
+    # Public, browser-safe placeholders only. The build reads these at compile
+    # time, and a missing value would change which branch of the storefront gets
+    # prerendered, so CI would stop resembling the real build. Every real value
+    # lives in Vercel; nothing secret belongs here, and nothing here is secret.
+    env:
+      NEXT_PUBLIC_QUICKDASH_API_URL: https://api.quickdash.xyz
+      NEXT_PUBLIC_QUICKDASH_WORKSPACE_ID: 00000000-0000-0000-0000-000000000000
+      NEXT_PUBLIC_QUICKDASH_SITE_KEY: ci_placeholder_site_key
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_ci_placeholder
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
