@@ -9,6 +9,7 @@ import { quickDashClient } from "@/lib/quickdash";
 import { useCart } from "./cart-store";
 import { useCatalog } from "./catalog-store";
 import { useCustomerAuth } from "./customer-auth-store";
+import { StripePaymentElement } from "./stripe-payment-element";
 import { useToast } from "./toast-store";
 
 const steps = [
@@ -20,6 +21,12 @@ const steps = [
   "REVIEW",
 ] as const;
 type Step = (typeof steps)[number];
+
+type StripeCheckout = {
+  clientSecret: string;
+  order: QuickCheckoutResult["order"];
+  providerAccountId: string;
+};
 
 type CheckoutData = {
   address: string;
@@ -63,6 +70,9 @@ export function CheckoutFlow() {
   );
   const [shippingLoading, setShippingLoading] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
+  const [stripeCheckout, setStripeCheckout] = useState<StripeCheckout | null>(
+    null,
+  );
   const [completedOrder, setCompletedOrder] = useState<
     QuickCheckoutResult["order"] | null
   >(null);
@@ -191,15 +201,6 @@ export function CheckoutFlow() {
         );
       }
 
-      sessionStorage.setItem(
-        "caffeinate-checkout",
-        JSON.stringify({
-          order: checkout.order,
-          externalPaymentId: checkout.payment.externalPaymentId,
-          provider: checkout.payment.provider,
-        }),
-      );
-
       const nextAction = checkout.payment.nextAction;
       if (nextAction.type === "approval") {
         window.location.assign(nextAction.approvalUrl);
@@ -210,9 +211,32 @@ export function CheckoutFlow() {
         return;
       }
       if (nextAction.type === "client_secret") {
-        throw new Error(
-          "Stripe returned a payment session, but the secure card element is not mounted yet.",
+        const payment = checkout.payment as typeof checkout.payment & {
+          providerAccountId?: unknown;
+        };
+        if (
+          typeof payment.providerAccountId !== "string" ||
+          !payment.providerAccountId
+        ) {
+          throw new Error(
+            "Stripe did not identify the connected merchant account. No card details were collected.",
+          );
+        }
+        const pending = {
+          clientSecret: nextAction.clientSecret,
+          order: checkout.order,
+          providerAccountId: payment.providerAccountId,
+        };
+        sessionStorage.setItem(
+          "caffeinate-checkout",
+          JSON.stringify({
+            ...pending,
+            externalPaymentId: checkout.payment.externalPaymentId,
+            provider: checkout.payment.provider,
+          }),
         );
+        setStripeCheckout(pending);
+        return;
       }
 
       setCompletedOrder(checkout.order);
@@ -585,28 +609,40 @@ export function CheckoutFlow() {
               </div>
               <div>
                 <dt>PAYMENT</dt>
-                <dd>STRIPE / NOT CONNECTED</dd>
+                <dd>STRIPE / SECURE ELEMENT</dd>
               </div>
             </dl>
-            <div className="checkout-actions">
-              <button
-                className="secondary-cta cursor-pointer"
-                onClick={() => setStep("PAYMENT")}
-                type="button"
-              >
-                BACK
-              </button>
-              <button
-                className="cursor-pointer"
-                disabled={submittingOrder}
-                onClick={startPayment}
-                type="button"
-              >
-                {submittingOrder
-                  ? "OPENING PAYMENT..."
-                  : `AUTHORIZE $${money(subtotal + shipping)} CAD`}
-              </button>
-            </div>
+            {stripeCheckout ? (
+              <StripePaymentElement
+                amountLabel={`$${money(stripeCheckout.order.totalCents)} ${stripeCheckout.order.currency}`}
+                clientSecret={stripeCheckout.clientSecret}
+                providerAccountId={stripeCheckout.providerAccountId}
+                onConfirmed={() => {
+                  clear();
+                  setCompletedOrder(stripeCheckout.order);
+                }}
+              />
+            ) : (
+              <div className="checkout-actions">
+                <button
+                  className="secondary-cta cursor-pointer"
+                  onClick={() => setStep("PAYMENT")}
+                  type="button"
+                >
+                  BACK
+                </button>
+                <button
+                  className="cursor-pointer"
+                  disabled={submittingOrder}
+                  onClick={startPayment}
+                  type="button"
+                >
+                  {submittingOrder
+                    ? "OPENING PAYMENT..."
+                    : `AUTHORIZE $${money(subtotal + shipping)} CAD`}
+                </button>
+              </div>
+            )}
           </section>
         ) : null}
       </section>
