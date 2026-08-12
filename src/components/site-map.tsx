@@ -25,7 +25,6 @@ export const siteMap = [
       ["RETURNS", "/returns"],
       ["PRIVACY", "/privacy"],
       ["TERMS", "/terms"],
-      ["INSTAGRAM", "https://instagram.com"],
     ],
   },
 ] as const;

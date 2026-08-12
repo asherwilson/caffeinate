@@ -6,6 +6,12 @@
  * the edge of a page. Those must never disagree, or the numbers in the header
  * would stop describing where the arrows take you.
  */
+/*
+ * ⚠️ ACCOUNT is deliberately absent. GET CAFFEINATED points at `/account`, and
+ * a numbered slot for the same page next to a button for it was two routes to
+ * one destination. Removing it renumbers everything below it — the numbers are
+ * positional, and a gap at 08 would read as a bug.
+ */
 export const navigation = [
   ["01", "COFFEE", "/coffee"],
   ["02", "SUBSCRIBE", "/subscribe"],
@@ -14,9 +20,8 @@ export const navigation = [
   ["05", "CONTACT", "/contact"],
   ["06", "CART", "/cart"],
   ["07", "SEARCH", "/search"],
-  ["08", "ACCOUNT", "/account"],
-  ["09", "ORDERS", "/account/orders"],
-  ["10", "COMMANDS", "#commands"],
+  ["08", "ORDERS", "/account/orders"],
+  ["09", "COMMANDS", "#commands"],
 ] as const;
 
 /**
