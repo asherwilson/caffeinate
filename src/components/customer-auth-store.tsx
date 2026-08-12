@@ -17,11 +17,60 @@ import { migrateBrowserValue } from "@/lib/browser-storage";
 import { quickDashClient, quickDashConfigured } from "@/lib/quickdash";
 
 type CustomerSession = { email: string; provider: "email" };
+
+export type CustomerConversation = {
+  id: string;
+  subject: string;
+  status: "open" | "closed";
+  lastMessageAt: string;
+};
+
+export type CustomerMessage = {
+  id: string;
+  sender: "customer" | "operator" | "system";
+  body: string;
+  createdAt: string;
+};
+
+/**
+ * Read a thread's messages, which the published types do not describe.
+ *
+ * `getMessage` returns `messages: unknown[]` in `@quickengine/quick@0.1.0`, so
+ * the shape has to be recovered here. Same lag as `providerAccountId` and the
+ * order money fields: refine at runtime, and drop anything that does not match
+ * rather than render a half-read message.
+ */
+const readMessages = (value: unknown): CustomerMessage[] =>
+  Array.isArray(value)
+    ? value.flatMap((entry) => {
+        if (!entry || typeof entry !== "object") return [];
+        const row = entry as Record<string, unknown>;
+        return typeof row.id === "string" && typeof row.body === "string"
+          ? [
+              {
+                id: row.id,
+                sender:
+                  row.sender === "operator" || row.sender === "system"
+                    ? row.sender
+                    : "customer",
+                body: row.body,
+                createdAt:
+                  typeof row.createdAt === "string" ? row.createdAt : "",
+              },
+            ]
+          : [];
+      })
+    : [];
+
 type CustomerAuthContextValue = {
   configured: boolean;
+  createMessage: (subject: string, body: string) => Promise<void>;
+  getMessage: (id: string) => Promise<CustomerMessage[]>;
   getOrder: (id: string) => Promise<QuickCustomerOrderDetail>;
+  listMessages: () => Promise<CustomerConversation[]>;
   listOrders: () => Promise<QuickOrder[]>;
   loading: boolean;
+  replyToMessage: (id: string, body: string) => Promise<void>;
   requestSignInLink: (email: string) => Promise<void>;
   session: CustomerSession | null;
   signOut: () => Promise<void>;
@@ -61,6 +110,17 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CustomerAuthContextValue>(
     () => ({
       configured: quickDashConfigured,
+      createMessage: async (subject, body) => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        await quickDashClient(token).customer.createMessage(subject, body);
+      },
+      getMessage: async (id) => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        const { data } = await quickDashClient(token).customer.getMessage(id);
+        return readMessages(data.messages);
+      },
       // 🔴 The only call that carries payment state. An order stays `placed`
       // after a refund, because a refund is not a cancellation, so the money's
       // real status lives on `payment.status` and appears nowhere in the list.
@@ -69,6 +129,17 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         if (!token) throw new Error("Customer sign-in is required.");
         const { data } = await quickDashClient(token).customer.getOrder(id);
         return data;
+      },
+      listMessages: async () => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        const { data } = await quickDashClient(token).customer.listMessages();
+        return data.items.map((item) => ({
+          id: item.id,
+          subject: item.subject,
+          status: item.status,
+          lastMessageAt: item.lastMessageAt,
+        }));
       },
       listOrders: async () => {
         const token = window.localStorage.getItem(tokenStorageKey);
@@ -80,6 +151,11 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         return data.items;
       },
       loading,
+      replyToMessage: async (id, body) => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        await quickDashClient(token).customer.replyToMessage(id, body);
+      },
       requestSignInLink: async (email) => {
         await quickDashClient().customer.requestSignInLink(
           email.trim().toLowerCase(),

@@ -50,6 +50,9 @@ export function AccountAccess() {
           <a className="secondary-cta cursor-pointer" href="/account/orders">
             VIEW ORDERS
           </a>
+          <a className="secondary-cta cursor-pointer" href="/account/messages">
+            MESSAGES
+          </a>
           <button
             className="secondary-cta cursor-pointer"
             onClick={async () => {
