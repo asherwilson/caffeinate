@@ -1,6 +1,9 @@
 "use client";
 
-import type { QuickOrder } from "@quickengine/quick/browser";
+import type {
+  QuickCustomerOrderDetail,
+  QuickOrder,
+} from "@quickengine/quick/browser";
 import {
   createContext,
   type ReactNode,
@@ -16,10 +19,10 @@ import { quickDashClient, quickDashConfigured } from "@/lib/quickdash";
 type CustomerSession = { email: string; provider: "email" };
 type CustomerAuthContextValue = {
   configured: boolean;
+  getOrder: (id: string) => Promise<QuickCustomerOrderDetail>;
   listOrders: () => Promise<QuickOrder[]>;
   loading: boolean;
   requestSignInLink: (email: string) => Promise<void>;
-  openPortal: () => Promise<void>;
   session: CustomerSession | null;
   signOut: () => Promise<void>;
   verifySignInLink: (token: string) => Promise<void>;
@@ -58,6 +61,15 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CustomerAuthContextValue>(
     () => ({
       configured: quickDashConfigured,
+      // 🔴 The only call that carries payment state. An order stays `placed`
+      // after a refund, because a refund is not a cancellation, so the money's
+      // real status lives on `payment.status` and appears nowhere in the list.
+      getOrder: async (id) => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        const { data } = await quickDashClient(token).customer.getOrder(id);
+        return data;
+      },
       listOrders: async () => {
         const token = window.localStorage.getItem(tokenStorageKey);
         if (!token) throw new Error("Customer sign-in is required.");
@@ -68,24 +80,6 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         return data.items;
       },
       loading,
-      openPortal: async () => {
-        const portalUrl = process.env.NEXT_PUBLIC_QUICKDASH_PORTAL_URL;
-        const portalSlug = process.env.NEXT_PUBLIC_QUICKDASH_PORTAL_SLUG;
-        if (!portalUrl || !portalSlug) {
-          throw new Error("The customer portal has not been published yet.");
-        }
-        const destination = `${portalUrl.replace(/\/$/, "")}/${portalSlug}`;
-        const token = window.localStorage.getItem(tokenStorageKey);
-        if (!token) {
-          window.location.assign(destination);
-          return;
-        }
-        const { data } =
-          await quickDashClient(token).customer.requestPortalHandoff();
-        const handoff = new URL(`${destination}/handoff`);
-        handoff.searchParams.set("token", data.token);
-        window.location.assign(handoff.toString());
-      },
       requestSignInLink: async (email) => {
         await quickDashClient().customer.requestSignInLink(
           email.trim().toLowerCase(),
