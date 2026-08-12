@@ -164,14 +164,38 @@ export function CustomerMessages() {
       </ol>
 
       {open && messages !== null ? (
-        <ol className="message-thread">
-          {messages.map((message) => (
-            <li key={message.id} data-sender={message.sender}>
-              <p>{message.sender.toUpperCase()}</p>
-              <p>{message.body}</p>
-            </li>
-          ))}
-        </ol>
+        messages.length === 0 ? (
+          <p className="message-thread-empty">NO MESSAGES ON THIS ORDER YET.</p>
+        ) : (
+          <ol className="message-thread">
+            {messages.map((message) => (
+              <li
+                key={message.id}
+                className="message"
+                data-sender={message.sender}
+              >
+                <header>
+                  <span className="message-sender">
+                    {message.sender === "operator"
+                      ? "CAFFEINATE"
+                      : message.sender === "system"
+                        ? "SYSTEM"
+                        : "YOU"}
+                  </span>
+                  {message.createdAt ? (
+                    <time dateTime={message.createdAt}>
+                      {new Date(message.createdAt).toLocaleString("en-CA", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </time>
+                  ) : null}
+                </header>
+                <p className="message-body">{message.body}</p>
+              </li>
+            ))}
+          </ol>
+        )
       ) : null}
 
       <form className="message-form" onSubmit={send}>

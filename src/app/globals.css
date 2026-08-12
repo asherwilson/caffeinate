@@ -324,9 +324,19 @@
 
 html,
 body {
-  overflow-x: hidden;
+  /* 🔴 `clip`, not `hidden`. `overflow-x: hidden` makes these a scroll
+     container, which silently stops `position: sticky` working on anything
+     inside them — including the header. `clip` still prevents sideways scroll
+     without creating that container. */
+  overflow-x: clip;
   min-height: 100%;
   margin: 0;
+}
+
+/* The page gutter, in one place. Was hardcoded as 20px across the header, the
+   three home sections and both footers, so widening it meant finding all six. */
+:root {
+  --gutter: 28px;
 }
 
 html {
@@ -334,14 +344,18 @@ html {
 }
 
 @media (pointer: fine) {
+  /*
+   * One cursor, everywhere.
+   *
+   * The pointer is the whole cursor treatment now, rather than an arrow that
+   * swaps to a hand over links. `html` is included explicitly because
+   * `macos-cursors/style.css` sets its own arrow there on import, and without
+   * this that package would quietly win on the parts of the page nothing else
+   * covers.
+   */
   html,
   body,
-  body * {
-    cursor:
-      url("/macos-auto.png") 4 2,
-      auto;
-  }
-
+  body *,
   .cursor-pointer {
     cursor:
       url("/macos-pointer.png") 9 1,
@@ -361,12 +375,76 @@ body {
 }
 
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
   gap: 32px;
-  padding: 18px 20px;
+  /* Opaque, or the page reads straight through the bar as it scrolls under.
+     `--paper` is the same token `body` uses, so this follows every theme. */
+  background: var(--paper);
+  padding: 18px var(--gutter);
+}
+
+/*
+ * The cup mark.
+ *
+ * Painted as `currentColor` through a mask rather than loaded as an image, so
+ * one file is correct in all eight themes. A light and a dark PNG pair would
+ * need a third, a fourth, and a rule per theme; this needs none and inherits
+ * whatever the header's text colour already is.
+ */
+.header-brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  /* Same 12px as the nav items. The wordmark is a label in the strip, not a
+     masthead — the mark beside it is what carries the weight. */
+  font-size: 12px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+/*
+ * ⚠️ Distinct classes, not `.header-brand .brand-mark` and
+ * `.mobile-brand .brand-mark`. The production minifier collapses both of those
+ * to a bare `.brand-mark`, so whichever came last silently won and the header
+ * mark rendered at the mobile size.
+ */
+.brand-mark {
+  display: block;
+  background: currentColor;
+  mask: url("/caffeinate.svg") no-repeat center / contain;
+}
+
+/* Sized just above the 16px nav items so it reads as a mark rather than another
+   label, and under the 29px call to action so it does not compete. */
+.brand-mark-header {
+  width: 20px;
+  height: 20px;
+}
+
+/* The nav keeps its left edge.
+   `.site-header` is `space-between`, so adding the mark as a third child would
+   otherwise push the navigation into the middle of the bar. */
+.site-header .desktop-navigation {
+  margin-right: auto;
+}
+
+.mobile-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-mark-mobile {
+  width: 16px;
+  height: 16px;
 }
 
 .mobile-header,
@@ -518,12 +596,88 @@ body {
 }
 
 .hero {
+  position: relative;
   display: grid;
   min-height: calc(100vh - 50px);
   grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
   gap: 48px;
   align-items: end;
-  padding: clamp(64px, 10vw, 150px) 20px 28px;
+  padding: clamp(64px, 10vw, 150px) var(--gutter) 28px;
+}
+
+/*
+ * The hero backdrop.
+ *
+ * Sits behind the hero's own children rather than on `.hero` itself, so the
+ * grid keeps working and the text stays in normal flow above it.
+ */
+.hero-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  /* Decoration only. Clicks and drags belong to the page underneath. */
+  pointer-events: none;
+}
+
+.hero-backdrop-slide {
+  opacity: 0;
+  transition: opacity 1200ms ease-in-out;
+  object-fit: cover;
+}
+
+.hero-backdrop-slide[data-active="true"] {
+  opacity: 1;
+}
+
+/*
+ * The glass.
+ *
+ * 🔴 `--paper-rgb` and not `--paper`, because this needs the theme's own
+ * background at partial alpha and a hex cannot be faded. Every theme defines
+ * the rgb triplet, so the tint follows whichever one is active instead of
+ * being a fixed dark wash that would blow out the light themes.
+ */
+.hero-backdrop-glass {
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--paper-rgb) / 0.82);
+}
+
+/*
+ * The same dither the product images use on hover.
+ *
+ * A 3px checkerboard in the theme's own paper colour, so it reads as the image
+ * being screened rather than as a grey film laid over it. Driven from `.hero`
+ * rather than the backdrop, because the backdrop is `pointer-events: none` and
+ * can never be hovered itself.
+ */
+.hero-backdrop::after {
+  position: absolute;
+  z-index: 1;
+  background-image: conic-gradient(
+    from 90deg at 1px 1px,
+    transparent 25%,
+    rgb(var(--paper-rgb) / 65%) 0 50%,
+    transparent 0 75%,
+    rgb(var(--paper-rgb) / 65%) 0
+  );
+  background-size: 3px 3px;
+  content: "";
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero:hover .hero-backdrop::after {
+  opacity: 1;
+}
+
+/* The hero's real content rides above the backdrop. */
+.hero-intro,
+.current-build {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-intro {
@@ -580,17 +734,36 @@ body {
     box-shadow 80ms steps(2, end);
 }
 
-.header-cta:hover,
+/*
+ * Arrow-key selection on a button is the same event as hovering it, so it gets
+ * the same dither rather than a solid fill.
+ *
+ * 🔴 Scoped to buttons on purpose. The generic
+ * `[data-keyboard-target][data-selected="true"]` rule further up still paints
+ * headings and paragraphs as a solid inverted block, which is what makes the
+ * cursor findable in a wall of text. A button already has an outline and a
+ * shadow saying where it is; it only needs the surface to change.
+ *
+ * The `:hover` half of this rule used to sit here too, saying "stay filled",
+ * while the block further down said "invert to paper" — same specificity, so
+ * the later one silently won. Two rules disagreeing about one state is how a
+ * button ends up unreadable.
+ */
 .header-cta[data-selected="true"],
-.hero-action-primary:hover,
 .hero-action-primary[data-selected="true"],
-.cart-checkout:hover,
 .cart-checkout[data-selected="true"],
-.footer-action:hover,
-.footer-action[data-selected="true"] {
-  background: var(--ink);
-  background-image: none;
-  color: var(--paper);
+.footer-action[data-selected="true"],
+.secondary-cta[data-selected="true"] {
+  background-color: var(--paper);
+  background-image: conic-gradient(
+    from 90deg at 1px 1px,
+    transparent 25%,
+    var(--ink) 0 50%,
+    transparent 0 75%,
+    var(--ink) 0
+  );
+  background-size: 2px 2px;
+  color: var(--ink);
 }
 
 .header-cta:active,
@@ -632,12 +805,6 @@ body {
   color: var(--ink);
 }
 
-.secondary-cta[data-selected="true"] {
-  background: var(--ink);
-  background-image: none;
-  color: var(--paper);
-}
-
 .secondary-cta:active,
 .secondary-cta[data-pressed="true"] {
   box-shadow: 0 0 0 var(--ink);
@@ -674,7 +841,7 @@ body {
 
 .catalog-label {
   width: fit-content;
-  margin: 0 20px 28px;
+  margin: 0 var(--gutter) 28px;
   padding: 2px 0;
   font-size: 11px;
   line-height: 1.35;
@@ -687,7 +854,7 @@ body {
   gap: clamp(40px, 8vw, 140px);
   align-items: center;
   border-top: 1px solid var(--ink);
-  padding: clamp(56px, 8vw, 120px) 20px;
+  padding: clamp(56px, 8vw, 120px) var(--gutter);
 }
 
 .product-release[data-reversed="true"] {
@@ -819,7 +986,7 @@ body {
 }
 
 .featured-release {
-  padding: 28px 20px clamp(84px, 10vw, 160px);
+  padding: 28px var(--gutter) clamp(84px, 10vw, 160px);
   border-top: 1px solid var(--ink);
 }
 
@@ -946,7 +1113,7 @@ body {
 
 .brew-protocol {
   min-height: 100vh;
-  padding: 28px 20px clamp(84px, 10vw, 160px);
+  padding: 28px var(--gutter) clamp(84px, 10vw, 160px);
   border-top: 1px solid var(--ink);
 }
 
@@ -1003,7 +1170,7 @@ body {
 
 .background-process {
   min-height: 100vh;
-  padding: 28px 20px clamp(84px, 10vw, 160px);
+  padding: 28px var(--gutter) clamp(84px, 10vw, 160px);
   border-top: 1px solid var(--ink);
   background: var(--ink);
   color: var(--paper);
@@ -1014,7 +1181,35 @@ body {
   color: var(--ink);
 }
 
+/* Buttons in here take the dark section's dither on selection, matching hover.
+   Listed after the rule above so it wins for controls specifically, while text
+   in this section keeps the solid inverted block. */
+.background-process .process-option[data-selected="true"],
+.background-process .process-action[data-selected="true"] {
+  background-color: var(--ink);
+  background-image: conic-gradient(
+    from 90deg at 1px 1px,
+    transparent 25%,
+    var(--paper) 0 50%,
+    transparent 0 75%,
+    var(--paper) 0
+  );
+  background-size: 2px 2px;
+  color: var(--paper);
+}
+
+/*
+ * 🔴 `background-color` is not optional here.
+ *
+ * This rule sets a paper dither and paper text, which is correct against the
+ * section's ink panel — but it used to leave the background alone, and the
+ * controls inside carry their own paper fill when active. Paper text landed on
+ * a paper button: contrast 1.00, the text simply gone. Naming the background
+ * makes the pair self-contained instead of depending on what the button
+ * happened to be sitting on.
+ */
 .background-process [data-keyboard-target]:hover {
+  background-color: var(--ink);
   background-image: conic-gradient(
     from 90deg at 1px 1px,
     transparent 25%,
@@ -1241,7 +1436,7 @@ body {
 
 .interior-page {
   min-height: calc(100vh - 50px);
-  padding: clamp(72px, 10vw, 150px) 20px 80px;
+  padding: clamp(72px, 10vw, 150px) var(--gutter) 80px;
 }
 
 .interior-eyebrow,
@@ -1352,10 +1547,13 @@ body {
 }
 
 .empty-state,
-.search-form {
+/* The rule under the field, not a divider above it. It used to sit on top,
+   which read as the end of the header block, and the actual input hid beneath
+   it at 11px. Same line, moved to where it means "type here". */
+  .search-form {
   margin-top: 80px;
-  border-top: 1px solid var(--ink);
-  padding-top: 18px;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 18px;
   font-size: 11px;
   line-height: 1.4;
 }
@@ -1517,8 +1715,13 @@ body {
 
 .search-form {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Two columns, not three: the label is visually hidden and still needs to
+     exist for the input to have an accessible name. */
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
+  /* RUN sits on the query's baseline rather than floating at the top of a
+     tall row. */
+  align-items: baseline;
 }
 
 .search-form input,
@@ -1529,6 +1732,55 @@ body {
   background: transparent;
   color: inherit;
   font: inherit;
+}
+
+/* 🔴 After the `font: inherit` above, which is a shorthand and would otherwise
+   reset this back to the form's 11px. */
+.search-form input {
+  padding: 0;
+  font-size: clamp(28px, 4vw, 56px);
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.search-form input::placeholder {
+  color: inherit;
+  opacity: 0.3;
+}
+
+/* Structure only — sizing and rhythm are yours to set. */
+.search-results {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.search-count {
+  margin-top: 24px;
+  opacity: 0.55;
+}
+
+.search-result {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  gap: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  padding: 14px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.search-result-kind {
+  opacity: 0.55;
+}
+
+.search-result-detail {
+  text-align: right;
+  opacity: 0.7;
+}
+
+.search-empty {
+  margin-top: 24px;
+  opacity: 0.7;
 }
 
 .brew-method::before,
@@ -1556,7 +1808,24 @@ body {
   color: var(--ink);
 }
 
+.brew-output .brew-method[data-selected="true"],
+.brew-output .brew-action[data-selected="true"] {
+  background-color: var(--ink);
+  background-image: conic-gradient(
+    from 90deg at 1px 1px,
+    transparent 25%,
+    var(--paper) 0 50%,
+    transparent 0 75%,
+    var(--paper) 0
+  );
+  background-size: 2px 2px;
+  color: var(--paper);
+}
+
+/* Same fix as `.background-process`: name the background, or paper text lands
+   on whatever fill the control already had. */
 .brew-output [data-keyboard-target]:hover {
+  background-color: var(--ink);
   background-image: conic-gradient(
     from 90deg at 1px 1px,
     transparent 25%,
@@ -1617,7 +1886,7 @@ body {
 
 .site-footer {
   min-height: 100vh;
-  padding: 28px 20px 18px;
+  padding: 28px var(--gutter) 18px;
   border-top: 1px solid var(--ink);
 }
 
@@ -1906,7 +2175,7 @@ body {
 
 .interior-footer {
   border-top: 1px solid var(--ink);
-  padding: 72px 20px 18px;
+  padding: 72px var(--gutter) 18px;
 }
 
 .interior-footer-heading {
@@ -2123,7 +2392,7 @@ body {
 .state-page {
   display: grid;
   min-height: calc(100vh - 50px);
-  padding: clamp(48px, 8vw, 112px) 20px;
+  padding: clamp(48px, 8vw, 112px) var(--gutter);
   place-items: center;
 }
 
@@ -2207,7 +2476,7 @@ body {
   min-height: 100vh;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px;
+  padding: 20px var(--gutter);
 }
 
 .loading-status {
@@ -2348,11 +2617,24 @@ body {
 .cart-checkout:hover,
 .footer-action:hover,
 .store-product-actions button:hover,
+.store-product-actions button[data-selected="true"],
 .product-detail-controls button:hover,
+.product-detail-controls button[data-selected="true"],
 .terminal-form button:hover,
-.system-state-actions > :first-child:hover {
-  background: var(--paper);
-  background-image: none;
+.terminal-form button[data-selected="true"],
+.system-state-actions > :first-child:hover,
+.system-state-actions > :first-child[data-selected="true"] {
+  background-color: var(--paper);
+  /* Same dither as the outlined buttons. Both families already invert to paper
+     on hover; the filled ones were the only ones doing it as a flat wash. */
+  background-image: conic-gradient(
+    from 90deg at 1px 1px,
+    transparent 25%,
+    var(--ink) 0 50%,
+    transparent 0 75%,
+    var(--ink) 0
+  );
+  background-size: 2px 2px;
   color: var(--ink);
 }
 
@@ -2368,11 +2650,17 @@ body {
 }
 
 .store-product-actions a:hover,
+.store-product-actions a[data-selected="true"],
 .empty-state a:hover,
+.empty-state a[data-selected="true"],
 .system-state-actions > :nth-child(2):hover,
+.system-state-actions > :nth-child(2)[data-selected="true"],
 .account-options a:first-of-type:hover,
+.account-options a:first-of-type[data-selected="true"],
 .search-form button:hover,
+.search-form button[data-selected="true"],
 .loading-preview-exit:hover,
+.loading-preview-exit[data-selected="true"],
 .secondary-cta:hover {
   background-color: var(--paper);
   background-image: conic-gradient(
@@ -2447,15 +2735,26 @@ body {
 }
 
 .product-actions button.product-action:hover,
+.product-actions button.product-action[data-selected="true"],
 .release-actions button.release-action:hover,
+.release-actions button.release-action[data-selected="true"],
 .process-action:hover {
-  background: var(--paper);
-  background-image: none;
+  background-color: var(--paper);
+  background-image: conic-gradient(
+    from 90deg at 1px 1px,
+    transparent 25%,
+    var(--ink) 0 50%,
+    transparent 0 75%,
+    var(--ink) 0
+  );
+  background-size: 2px 2px;
   color: var(--ink);
 }
 
 .product-actions a.product-action:hover,
+.product-actions a.product-action[data-selected="true"],
 .release-actions a.release-action:hover,
+.release-actions a.release-action[data-selected="true"],
 .brew-action:hover {
   background-color: var(--paper);
   background-image: conic-gradient(
@@ -2596,6 +2895,99 @@ body {
 
   to {
     clip-path: inset(0);
+  }
+}
+
+/*
+ * Sliding between pages.
+ *
+ * 🔴 Works because the navigation is plain `<a href>`, not a client router, so
+ * every click is a real document navigation and the CROSS-document View
+ * Transitions API applies. That is the whole implementation: no interception,
+ * no router wrapper, no JavaScript. Turning these links into `next/link` would
+ * silently break it, because same-document navigations need `startViewTransition`
+ * instead.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+/*
+ * The header does not travel.
+ *
+ * Naming it takes it out of the `root` group, so it morphs in place while only
+ * the page beneath slides. Without this the sticky bar would ride out with the
+ * old page and back in with the new one, which reads as the whole site moving
+ * rather than the content changing underneath a fixed frame.
+ */
+.site-header {
+  view-transition-name: site-header;
+}
+
+@keyframes slide-out-to-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-out-to-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-in-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+/* Travelling right: the old page leaves to the left, the new arrives from the
+   right, the way a strip of pages would actually move. */
+/*
+ * Timing is deliberately unhurried. At 280ms the page had already arrived
+ * before the eye followed it, which read as a cut rather than travel. One knob:
+ * change both durations together, and keep the paint delay just under the slide
+ * so the reveal starts as the page settles rather than after a pause.
+ */
+::view-transition-old(root) {
+  animation: slide-out-to-left 520ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/*
+ * The incoming page slides in, THEN paints.
+ *
+ * Sequenced deliberately: a page cannot be watched rendering line by line while
+ * it is also arriving fully drawn. The slide lands first, then the stepped
+ * reveal runs down it.
+ */
+::view-transition-new(root) {
+  animation:
+    slide-in-from-right 520ms cubic-bezier(0.4, 0, 0.2, 1) both,
+    first-paint 620ms steps(14, end) 440ms both;
+}
+
+/* Travelling left is the same journey in reverse. */
+[data-slide="left"]::view-transition-old(root) {
+  animation-name: slide-out-to-right;
+}
+
+[data-slide="left"]::view-transition-new(root) {
+  animation-name: slide-in-from-left, first-paint;
+}
+
+/* Motion here is decorative. Anyone who has asked for less of it gets a plain
+   cut, which is still a complete transition. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
   }
 }
 
@@ -3414,7 +3806,12 @@ body {
     padding: 14px;
   }
 
+  /* `.header-brand` joins these now that it carries the wordmark. `.mobile-header`
+     renders its own brand link, so leaving both on stacked CAFFEINATE® above
+     CAFFEINATE®. It was invisible as a bug while the desktop brand was a bare
+     20px mark. */
   .desktop-navigation,
+  .header-brand,
   .site-header > .header-cta {
     display: none;
   }

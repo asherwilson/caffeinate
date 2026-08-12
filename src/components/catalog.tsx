@@ -1,5 +1,4 @@
 import Image from "next/image";
-import type { DirectionalNavigation } from "./directional-navigation";
 
 const products = [
   {
@@ -46,12 +45,10 @@ const products = [
   },
 ] as const;
 
-type CatalogProps = Pick<DirectionalNavigation, "targetProps">;
-
-export function Catalog({ targetProps }: CatalogProps) {
+export function Catalog() {
   return (
     <section className="catalog" aria-labelledby="catalog-title">
-      <p id="catalog-title" className="catalog-label" {...targetProps(36)}>
+      <p id="catalog-title" className="catalog-label">
         {"// AVAILABLE_BUILDS / 03"}
       </p>
 
@@ -62,11 +59,11 @@ export function Catalog({ targetProps }: CatalogProps) {
           key={product.slug}
         >
           <div className="product-information">
-            <h2 {...targetProps(product.name)}>
+            <h2>
               <span>#{product.number} / RELEASE</span>
               {product.title}
             </h2>
-            <div className="product-details" {...targetProps(product.details)}>
+            <div className="product-details">
               <p>ROAST / {product.roast}</p>
               <p>NOTES / {product.notes}</p>
               <p>FORMAT / 340G / WHOLE_BEAN</p>
@@ -77,21 +74,16 @@ export function Catalog({ targetProps }: CatalogProps) {
               <a
                 className="product-action cursor-pointer"
                 href={`/coffee/${product.slug}`}
-                {...targetProps(product.actions[0])}
               >
                 INSPECT
               </a>
-              <button
-                className="product-action cursor-pointer"
-                type="button"
-                {...targetProps(product.actions[1])}
-              >
+              <button className="product-action cursor-pointer" type="button">
                 ADD TO CART
               </button>
             </div>
           </div>
 
-          <div className="product-visual" {...targetProps(product.image)}>
+          <div className="product-visual">
             <Image
               alt={product.imageAlt}
               fill

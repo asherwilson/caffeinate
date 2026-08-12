@@ -112,8 +112,14 @@ function targetInDirection(index: number, direction: Direction) {
   return directionalTargets[index]?.[direction] ?? null;
 }
 
-export function useDirectionalNavigation() {
-  const [selected, setSelected] = useState(0);
+/**
+ * @param initialIndex Which target the highlight rests on before the visitor
+ * moves. Defaults to the first item, which is only correct on the home page:
+ * arriving at `/about` and finding the cursor parked on `01 HOME` reads as if
+ * the wrong page loaded. Callers pass the index of the current route.
+ */
+export function useDirectionalNavigation(initialIndex = 0) {
+  const [selected, setSelected] = useState(initialIndex);
   const [wall, setWall] = useState<{
     direction: Direction;
     index: number;

@@ -36,6 +36,10 @@ yarn-error.log*
 # local-only planning and operations notes
 internal/
 
+# local-only assistant config and working agreement
+CLAUDE.md
+.claude/
+
 # vercel
 .vercel
 

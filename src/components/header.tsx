@@ -2,35 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useCart } from "./cart-store";
-import type { DirectionalNavigation } from "./directional-navigation";
+import { navigation } from "./navigation-items";
 
-const navigation = [
-  ["01", "HOME", "/"],
-  ["02", "COFFEE", "/coffee"],
-  ["03", "ABOUT", "/about"],
-  ["04", "FAQ", "/faq"],
-  ["05", "CONTACT", "/contact"],
-  ["06", "CART", "/cart"],
-  ["07", "SEARCH", "/search"],
-  ["08", "ACCOUNT", "/account"],
-  ["09", "ORDERS", "/account/orders"],
-  ["10", "COMMANDS", "#commands"],
-] as const;
+type HeaderProps = { onOpenTerminal: () => void };
 
-type HeaderProps = Partial<
-  Pick<DirectionalNavigation, "register" | "selected" | "wall">
-> & {
-  onOpenTerminal: () => void;
-  onSelect?: (index: number) => void;
-};
-
-export function Header({
-  onOpenTerminal,
-  onSelect,
-  register,
-  selected,
-  wall,
-}: HeaderProps) {
+export function Header({ onOpenTerminal }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { count } = useCart();
 
@@ -49,33 +25,32 @@ export function Header({
 
   return (
     <header aria-label="Site controls" className="site-header" role="toolbar">
+      {/* The mark is painted with `currentColor` through a CSS mask rather than
+          shipped as two coloured files, because there are eight themes and a
+          light/dark pair would be wrong in most of them. */}
+      {/* Now the way home, which is why `01 HOME` is gone from the strip: the
+          numbered slot and the brand were two routes to the same page, and the
+          mark is the one every site trains people to click. The mark alone was
+          too small a target to carry that on its own, so the wordmark sits with
+          it inside the same link. */}
+      <a className="header-brand cursor-pointer" href="/">
+        <span aria-hidden="true" className="brand-mark brand-mark-header" />
+        CAFFEINATE®
+      </a>
       <nav aria-label="Primary navigation" className="desktop-navigation">
         <ol className="navigation-list">
-          {navigation.map(([number, label, href], index) => (
+          {navigation.map(([number, label, href]) => (
             <li key={number}>
               {number === "10" ? (
                 <button
-                  ref={(element) => register?.(index, element)}
                   className="cursor-pointer"
-                  data-keyboard-target={register ? true : undefined}
-                  data-selected={selected === index ? "true" : undefined}
-                  data-wall={wall?.index === index ? wall.direction : undefined}
                   onClick={openTerminal}
-                  onPointerDown={() => onSelect?.(index)}
                   type="button"
                 >
                   {number} {label}
                 </button>
               ) : (
-                <a
-                  ref={(element) => register?.(index, element)}
-                  className="cursor-pointer"
-                  href={href}
-                  data-keyboard-target={register ? true : undefined}
-                  data-selected={selected === index ? "true" : undefined}
-                  data-wall={wall?.index === index ? wall.direction : undefined}
-                  onPointerDown={() => onSelect?.(index)}
-                >
+                <a className="cursor-pointer" href={href}>
                   {number} {label}
                   {label === "CART"
                     ? ` / ${String(count).padStart(2, "0")}`
@@ -86,22 +61,13 @@ export function Header({
           ))}
         </ol>
       </nav>
-      <a
-        ref={(element) => register?.(navigation.length, element)}
-        className="header-cta cursor-pointer"
-        href="/account"
-        data-keyboard-target={register ? true : undefined}
-        data-selected={selected === navigation.length ? "true" : undefined}
-        data-wall={
-          wall?.index === navigation.length ? wall.direction : undefined
-        }
-        onPointerDown={() => onSelect?.(navigation.length)}
-      >
+      <a className="header-cta cursor-pointer" href="/account">
         GET CAFFEINATED
       </a>
 
       <div className="mobile-header">
         <a className="mobile-brand cursor-pointer" href="/">
+          <span aria-hidden="true" className="brand-mark brand-mark-mobile" />
           CAFFEINATE®
         </a>
         <div className="mobile-controls">
