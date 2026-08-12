@@ -24,19 +24,13 @@ export const siteMap = [
       ["SHIPPING", "/shipping"],
       ["RETURNS", "/returns"],
       ["PRIVACY", "/privacy"],
+      ["TERMS", "/terms"],
       ["INSTAGRAM", "https://instagram.com"],
     ],
   },
 ] as const;
 
-type SiteMapProps = {
-  getTargetProps?: (index: number) => Record<string, unknown>;
-  startIndex?: number;
-};
-
-export function SiteMap({ getTargetProps, startIndex = 0 }: SiteMapProps) {
-  let linkIndex = startIndex;
-
+export function SiteMap() {
   return (
     <nav aria-label="Site map" className="site-map">
       {siteMap.map((group) => (
@@ -44,10 +38,9 @@ export function SiteMap({ getTargetProps, startIndex = 0 }: SiteMapProps) {
           <p>{`// ${group.label}`}</p>
           <ul>
             {group.links.map(([label, href]) => {
-              const targetProps = getTargetProps?.(linkIndex++);
               return (
                 <li key={label}>
-                  <a className="cursor-pointer" href={href} {...targetProps}>
+                  <a className="cursor-pointer" href={href}>
                     {label}
                   </a>
                 </li>

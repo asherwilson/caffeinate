@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { DirectionalNavigation } from "./directional-navigation";
 
 const methods = [
   {
@@ -46,9 +45,7 @@ const methods = [
   },
 ] as const;
 
-type BrewProtocolProps = Pick<DirectionalNavigation, "targetProps">;
-
-export function BrewProtocol({ targetProps }: BrewProtocolProps) {
+export function BrewProtocol() {
   const [activeMethod, setActiveMethod] = useState(0);
   const method = methods[activeMethod];
 
@@ -56,16 +53,14 @@ export function BrewProtocol({ targetProps }: BrewProtocolProps) {
     <section className="brew-protocol" aria-labelledby="brew-title">
       <div className="brew-interface">
         <div className="brew-introduction">
-          <p className="brew-label" {...targetProps(59)}>
-            {"// BREW_PROTOCOL / SELECT_RUNTIME"}
-          </p>
-          <h2 id="brew-title" {...targetProps(60)}>
+          <p className="brew-label">{"// BREW_PROTOCOL / SELECT_RUNTIME"}</p>
+          <h2 id="brew-title">
             COMPILE
             <br />A BETTER
             <br />
             CUP.
           </h2>
-          <p className="brew-copy" {...targetProps(61)}>
+          <p className="brew-copy">
             PICK A RUNTIME.
             <br />
             WE&apos;LL HANDLE THE PARAMETERS.
@@ -80,7 +75,6 @@ export function BrewProtocol({ targetProps }: BrewProtocolProps) {
                 key={item.id}
                 onClick={() => setActiveMethod(index)}
                 type="button"
-                {...targetProps(62 + index)}
               >
                 {item.label}
               </button>
@@ -89,10 +83,8 @@ export function BrewProtocol({ targetProps }: BrewProtocolProps) {
         </div>
 
         <div className="brew-output" aria-live="polite">
-          <p className="brew-output-label" {...targetProps(66)}>
-            % brew --method={method.id}
-          </p>
-          <dl {...targetProps(67)}>
+          <p className="brew-output-label">% brew --method={method.id}</p>
+          <dl>
             <div>
               <dt>INPUT /</dt>
               <dd>{method.dose}</dd>
@@ -106,7 +98,7 @@ export function BrewProtocol({ targetProps }: BrewProtocolProps) {
               <dd>{method.ratio}</dd>
             </div>
           </dl>
-          <dl {...targetProps(68)}>
+          <dl>
             <div>
               <dt>GRIND /</dt>
               <dd>{method.grind}</dd>
@@ -116,18 +108,14 @@ export function BrewProtocol({ targetProps }: BrewProtocolProps) {
               <dd>{method.temperature}</dd>
             </div>
           </dl>
-          <p className="brew-execution" {...targetProps(69)}>
+          <p className="brew-execution">
             <span>EXECUTION /</span>
             <strong>{method.time}</strong>
           </p>
         </div>
       </div>
 
-      <a
-        className="brew-action cursor-pointer"
-        href="/coffee"
-        {...targetProps(70)}
-      >
+      <a className="brew-action cursor-pointer" href="/coffee">
         OPEN FULL PROTOCOL
       </a>
     </section>

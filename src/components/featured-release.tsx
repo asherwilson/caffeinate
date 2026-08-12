@@ -1,16 +1,11 @@
 import Image from "next/image";
-import type { DirectionalNavigation } from "./directional-navigation";
 
-type FeaturedReleaseProps = Pick<DirectionalNavigation, "targetProps">;
-
-export function FeaturedRelease({ targetProps }: FeaturedReleaseProps) {
+export function FeaturedRelease() {
   return (
     <section className="featured-release" aria-labelledby="release-title">
-      <p className="release-label" {...targetProps(52)}>
-        {"// RELEASE_0001 / FEATURED_BUILD"}
-      </p>
+      <p className="release-label">{"// RELEASE_0001 / FEATURED_BUILD"}</p>
 
-      <div className="release-image" {...targetProps(53)}>
+      <div className="release-image">
         <Image
           alt="Espresso resting on a dark textured table"
           fill
@@ -22,12 +17,12 @@ export function FeaturedRelease({ targetProps }: FeaturedReleaseProps) {
 
       <div className="release-information">
         <div className="release-story">
-          <h2 id="release-title" {...targetProps(54)}>
+          <h2 id="release-title">
             HOUSE
             <br />
             PROCESS.
           </h2>
-          <p {...targetProps(55)}>
+          <p>
             THE DEFAULT BUILD.
             <br />
             RELIABLE UNDER
@@ -36,7 +31,7 @@ export function FeaturedRelease({ targetProps }: FeaturedReleaseProps) {
           </p>
         </div>
 
-        <div className="release-specification" {...targetProps(56)}>
+        <div className="release-specification">
           <p>
             <span>ORIGIN /</span>
             <span>COLOMBIA</span>
@@ -64,15 +59,10 @@ export function FeaturedRelease({ targetProps }: FeaturedReleaseProps) {
         <a
           className="release-action cursor-pointer"
           href="/coffee/house-process"
-          {...targetProps(57)}
         >
           INSPECT RELEASE
         </a>
-        <button
-          className="release-action cursor-pointer"
-          type="button"
-          {...targetProps(58)}
-        >
+        <button className="release-action cursor-pointer" type="button">
           ADD TO CART
         </button>
       </div>

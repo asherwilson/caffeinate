@@ -1,21 +1,17 @@
-import type { DirectionalNavigation } from "./directional-navigation";
-
-type HeroProps = Pick<DirectionalNavigation, "targetProps">;
-
-export function Hero({ targetProps }: HeroProps) {
+import { HeroBackdrop } from "./hero-backdrop";
+export function Hero() {
   return (
     <main className="hero">
+      <HeroBackdrop />
       <section className="hero-intro" aria-labelledby="hero-title">
-        <p className="hero-eyebrow" {...targetProps(11)}>
-          {"// CAFFEINATE® / SMALL-BATCH_COFFEE"}
-        </p>
-        <h1 id="hero-title" {...targetProps(12)}>
+        <p className="hero-eyebrow">{"// CAFFEINATE® / SMALL-BATCH_COFFEE"}</p>
+        <h1 id="hero-title">
           CAFFEINE IS
           <br />A RUNTIME
           <br />
           DEPENDENCY.
         </h1>
-        <p className="hero-copy" {...targetProps(13)}>
+        <p className="hero-copy">
           SPECIALTY COFFEE FOR PEOPLE
           <br />
           WITH TOO MANY TABS OPEN.
@@ -24,14 +20,12 @@ export function Hero({ targetProps }: HeroProps) {
           <a
             className="hero-action hero-action-primary cursor-pointer"
             href="/account"
-            {...targetProps(14)}
           >
             GET CAFFEINATED
           </a>
           <a
             className="hero-action secondary-cta cursor-pointer"
             href="/coffee"
-            {...targetProps(15)}
           >
             BROWSE THE STACK
           </a>
@@ -39,38 +33,22 @@ export function Hero({ targetProps }: HeroProps) {
       </section>
 
       <section className="current-build" aria-labelledby="current-build-title">
-        <p
-          id="current-build-title"
-          className="build-label"
-          {...targetProps(16)}
-        >
+        <p id="current-build-title" className="build-label">
           {"// CURRENT_BUILD"}
         </p>
-        <a
-          className="cursor-pointer"
-          href="/coffee/house-process"
-          {...targetProps(17)}
-        >
+        <a className="cursor-pointer" href="/coffee/house-process">
           <span>01 HOUSE PROCESS</span>
           <span>CHOCOLATE / CARAMEL / PANIC</span>
         </a>
-        <a
-          className="cursor-pointer"
-          href="/coffee/dark-mode"
-          {...targetProps(18)}
-        >
+        <a className="cursor-pointer" href="/coffee/dark-mode">
           <span>02 DARK MODE</span>
           <span>SMOKE / COCOA / BAD DECISIONS</span>
         </a>
-        <a
-          className="cursor-pointer"
-          href="/coffee/hotfix"
-          {...targetProps(19)}
-        >
+        <a className="cursor-pointer" href="/coffee/hotfix">
           <span>03 HOTFIX</span>
           <span>CITRUS / HONEY / 4:37 AM</span>
         </a>
-        <p className="build-status" {...targetProps(20)}>
+        <p className="build-status">
           STATUS / ROASTING=ONLINE / NEXT_DROP=08.16.26 / ORIGIN=CANADA
         </p>
       </section>

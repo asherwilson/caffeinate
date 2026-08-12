@@ -1,4 +1,5 @@
 import { InteriorPage } from "@/components/interior-page";
+import { SiteSearch } from "@/components/site-search";
 
 export default function SearchPage() {
   return (
@@ -7,19 +8,7 @@ export default function SearchPage() {
       eyebrow="// SEARCH / GLOBAL_INDEX"
       title="SEARCH."
     >
-      <form className="search-form">
-        <label htmlFor="site-search">% find /</label>
-        <input
-          className="cursor-text"
-          id="site-search"
-          name="query"
-          placeholder="TYPE A QUERY"
-          type="search"
-        />
-        <button className="cursor-pointer" type="submit">
-          RUN
-        </button>
-      </form>
+      <SiteSearch />
     </InteriorPage>
   );
 }
