@@ -442,9 +442,55 @@ body {
   gap: 8px;
 }
 
+/* Two knobs: this pair sizes the cup, `.mobile-brand` font-size sizes the
+   wordmark beside it. They are scaled together so the mark stays a little
+   taller than the cap height rather than sitting inside it. */
 .brand-mark-mobile {
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
+}
+
+/*
+ * The menu icon.
+ *
+ * Painted through a mask in `currentColor`, the same way the brand mark is, so
+ * it inherits whichever of the eight themes is active. An `<img>` here would be
+ * stuck at the file's own black and would disappear on the dark themes.
+ *
+ * ⚠️ Distinct classes rather than `.menu-toggle .icon` variants — the
+ * production minifier collapses same-shaped descendant selectors, which is what
+ * made the header brand mark render at the mobile size once already.
+ */
+.menu-icon-bars,
+.menu-icon-close {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+}
+
+.menu-icon-bars {
+  mask: url("/Icons/SVG/solid/bars-solid.svg") no-repeat center / contain;
+}
+
+.menu-icon-close {
+  mask: url("/Icons/SVG/solid/times-solid.svg") no-repeat center / contain;
+}
+
+/*
+ * 🔴 44px, not the 10px text button this replaced.
+ *
+ * An icon-only control has no text to pad the hit area out, and this is the one
+ * button standing between a phone visitor and the whole site. 44px is the size
+ * a thumb actually lands on; the icon inside stays 18px.
+ */
+.menu-toggle {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .mobile-header,
@@ -452,7 +498,16 @@ body {
   display: none;
 }
 
-.site-header nav {
+/*
+ * ⚠️ Scoped to the desktop strip, not to any `nav` in the header.
+ *
+ * This exists so the numbered strip can scroll sideways without clipping its
+ * focus rings — hence the 3px padding and the -3px margin cancelling it. But
+ * `.mobile-menu` is a `<nav>` in this header too, and `.site-header nav` beats
+ * a bare `.mobile-menu`, so the dropdown inherited a 3px gutter and an
+ * overflow scroller no matter what padding it asked for.
+ */
+.site-header .desktop-navigation {
   min-width: 0;
   margin: -3px;
   overflow-x: auto;
@@ -460,7 +515,7 @@ body {
   scrollbar-width: none;
 }
 
-.site-header nav::-webkit-scrollbar {
+.site-header .desktop-navigation::-webkit-scrollbar {
   display: none;
 }
 
@@ -2107,13 +2162,32 @@ body {
   margin-bottom: 24px;
 }
 
+/*
+ * 🔴 Three columns, not `space-between`.
+ *
+ * With two children and `justify-content: space-between`, the copyright sits at
+ * the left edge — centring it inside its own box does nothing, because the box
+ * is already hard left. An empty first column of equal width to the last one
+ * puts the middle column at the true centre of the footer, and the socials can
+ * be any width without dragging the copyright off it.
+ */
 .footer-bottom {
-  display: flex;
+  display: grid;
   align-items: end;
-  justify-content: space-between;
+  grid-template-columns: 1fr auto 1fr;
   gap: 32px;
   border-top: 1px solid var(--ink);
   padding-top: 12px;
+}
+
+.footer-copyright {
+  grid-column: 2;
+  justify-self: center;
+}
+
+.footer-bottom .social-links {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .footer-bottom nav {
@@ -2121,6 +2195,45 @@ body {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 20px;
+}
+
+.social-links {
+  display: flex;
+  gap: 8px;
+}
+
+/* 44px hit area around a 20px glyph, same reasoning as the menu toggle: an icon
+   has no label to pad the target out. */
+.social-link {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.social-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+}
+
+.social-instagram {
+  mask: url("/Icons/SVG/brands/instagram.svg") no-repeat center / contain;
+}
+
+.social-tiktok {
+  mask: url("/Icons/SVG/brands/tiktok.svg") no-repeat center / contain;
+}
+
+.social-x {
+  mask: url("/Icons/SVG/brands/x.svg") no-repeat center / contain;
+}
+
+.social-threads {
+  mask: url("/Icons/SVG/brands/threads.svg") no-repeat center / contain;
 }
 
 .footer-bottom a {
@@ -2584,6 +2697,7 @@ body {
 .account-options a:first-of-type,
 .search-form button,
 .loading-preview-exit,
+.mobile-menu-cta,
 .secondary-cta {
   width: fit-content;
   border: 1px solid var(--ink);
@@ -2606,7 +2720,8 @@ body {
 .header-cta,
 .hero-action-primary,
 .cart-checkout,
-.footer-action {
+.footer-action,
+.mobile-menu-cta {
   background: var(--ink);
   background-image: none;
   color: var(--paper);
@@ -2623,7 +2738,9 @@ body {
 .terminal-form button:hover,
 .terminal-form button[data-selected="true"],
 .system-state-actions > :first-child:hover,
-.system-state-actions > :first-child[data-selected="true"] {
+.system-state-actions > :first-child[data-selected="true"],
+.mobile-menu-cta:hover,
+.mobile-menu-cta[data-selected="true"] {
   background-color: var(--paper);
   /* Same dither as the outlined buttons. Both families already invert to paper
      on hover; the filled ones were the only ones doing it as a flat wash. */
@@ -3801,9 +3918,23 @@ body {
 }
 
 @media (max-width: 580px) {
+  /*
+   * 🔴 One gutter for the whole phone layout.
+   *
+   * `--gutter` stayed at its desktop 28px here while the header, hero and
+   * footer each hard-coded 14px, so the chrome and the interior pages sat on
+   * two different margins and anything using the variable — the dropdown
+   * included — lined up with neither. Setting it once means every rule that
+   * reads `var(--gutter)` agrees, and the hard-coded 14px below now matches it
+   * by value rather than by luck.
+   */
+  :root {
+    --gutter: 14px;
+  }
+
   .site-header {
     display: block;
-    padding: 14px;
+    padding: var(--gutter);
   }
 
   /* `.header-brand` joins these now that it carries the wordmark. `.mobile-header`
@@ -3829,7 +3960,9 @@ body {
     background: transparent;
     color: inherit;
     font: inherit;
-    font-size: 10px;
+    /* The wordmark. Paired with `.brand-mark-mobile` — move both or the cup
+       stops sitting right against the type. */
+    font-size: 13px;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
@@ -3840,15 +3973,177 @@ body {
     gap: 12px;
   }
 
+  /*
+   * Full-width stacked actions.
+   *
+   * Every action group on the site is `flex` + `wrap` with `width: fit-content`
+   * children, which on a 390px screen produces two thumbnail-sized buttons side
+   * by side. Turning the group into a column and letting the children stretch
+   * gives each one the full measure between the gutters — the padding is
+   * already on the page container, so "full width" needs no width maths here.
+   */
+  .hero-actions,
+  .product-actions,
+  .release-actions,
+  .store-product-actions,
+  .system-state-actions,
+  .checkout-actions,
+  .customer-session-actions,
+  .account-options {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /*
+   * 🔴 Every selector below matches the specificity of the `width: fit-content`
+   * rule it has to beat. A media query adds none of its own, so `.product-action`
+   * loses to `.product-actions .product-action` no matter how far down the file
+   * it sits — which is why the hero and the brew section went full width while
+   * the catalog and the featured release stayed small. Keep these in the
+   * descendant form even where the short one looks tidier.
+   */
+  .hero-action,
+  .secondary-cta,
+  .cart-checkout,
+  .footer-action,
+  .loading-preview-exit,
+  .brew-action,
+  .process-action,
+  .brew-method,
+  .process-option,
+  .empty-state a,
+  .search-form button,
+  .product-detail-controls button,
+  .terminal-form button,
+  .product-actions .product-action,
+  .release-actions .release-action,
+  .store-product-actions a,
+  .store-product-actions button,
+  .system-state-actions > :first-child,
+  .system-state-actions > :nth-child(2),
+  .account-options a,
+  .account-options a:first-of-type,
+  .auth-form button,
+  .oauth-access button,
+  .magic-link-state button,
+  .customer-session-actions > :first-child,
+  .customer-session-actions button,
+  .customer-session-actions a,
+  .checkout-access-options button,
+  .checkout-access-options a,
+  .checkout-actions button,
+  .mobile-menu-cta {
+    /*
+     * 44px tall, matching the menu toggle — one thumb size across the whole
+     * phone layout.
+     *
+     * ⚠️ `flex` and not `block` with padding, because these need their label
+     * centred on both axes and the labels differ in size (11px on the CTAs,
+     * 10px on the option chips). Row direction is deliberate: `.brew-method`
+     * and `.process-option` draw their `[ ]` brackets as `::before`/`::after`,
+     * and those become flex items — in a column they would stack above and
+     * below the label instead of bracketing it.
+     */
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    /* Centred because a label hugging the left edge of a 330px button reads as
+       a mistake. Change to `left` here if you want them ranged. */
+    justify-content: center;
+    text-align: center;
+  }
+
+  /*
+   * 🔴 Primary on top.
+   *
+   * These three groups put the secondary link first in the DOM — INSPECT before
+   * ADD, the outlined link before the filled button — which is the right order
+   * left-to-right on desktop but the wrong one top-to-bottom on a phone.
+   * `order` flips them visually here only, leaving the desktop row and the
+   * document order untouched.
+   */
+  .product-actions button.product-action,
+  .release-actions button.release-action,
+  .store-product-actions button {
+    order: -1;
+  }
+
+  /* RUN drops below the query rather than squeezing beside it. */
+  .search-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /*
+   * Hangs off the header rather than being placed against the viewport.
+   *
+   * 🔴 `absolute` + `top: 100%`, not `fixed` + `inset: 42px`. The old rule
+   * hard-coded a 42px header, so once the brand grew the bar stood 72px tall
+   * and the menu opened 30px up inside it. Measuring off the header itself
+   * cannot drift — `.site-header` is `sticky`, which makes it the containing
+   * block for this, so `top: 100%` is exactly its bottom edge whatever height
+   * it ends up.
+   *
+   * Height is content-driven now. It was a full-screen sheet pinned to the
+   * bottom of the viewport, which is a different component from a dropdown.
+   */
   .mobile-menu {
+    /*
+     * 🔴 `fixed`, anchored to the measured header height.
+     *
+     * It was `absolute` off the sticky header, which looks identical at the top
+     * of a page and breaks the moment you scroll: a sticky ancestor does not
+     * drag an absolutely positioned child along with it, so scrolling to the
+     * footer and opening the menu drew it back up at the top of the document,
+     * off screen. `--header-height` is published by the header itself through a
+     * ResizeObserver, so this stays flush with the bar at any size.
+     */
     position: fixed;
     z-index: 900;
+    top: var(--header-height, 72px);
+    right: 0;
+    left: 0;
     display: flex;
+    /*
+     * Fills the viewport below the header rather than hugging its content.
+     * That leftover space is what the socials centre themselves in.
+     */
+    height: calc(100dvh - var(--header-height, 72px));
     flex-direction: column;
     border-top: 1px solid var(--ink);
-    padding: 18px 14px;
+    padding: 18px var(--gutter);
     background: var(--paper);
-    inset: 42px 0 0;
+    overflow-y: auto;
+    /* The same stepped reveal an incoming page gets, at the same duration and
+       step count, so opening the menu reads as part of the site rather than a
+       widget bolted onto it. */
+    animation: first-paint 620ms steps(14, end) both;
+  }
+
+  /*
+   * Set by the header while the dropdown is open.
+   *
+   * The body is pinned at its current offset instead of `<html>` having its
+   * overflow hidden, which is what iOS actually respects and, more importantly,
+   * what leaves the scrollport intact. The header is switched to `fixed` for
+   * the duration because a pinned body has nothing left for `sticky` to stick
+   * to — without it the bar rides up out of view with the frozen page.
+   */
+  .menu-open body {
+    position: fixed;
+    top: var(--scroll-lock, 0);
+    right: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  .menu-open .site-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
   }
 
   .mobile-menu > p {
@@ -3856,8 +4151,22 @@ body {
     font-size: 10px;
   }
 
-  .mobile-menu > p:last-child {
-    margin: auto 0 0;
+  .mobile-menu-cta {
+    margin-top: 24px;
+  }
+
+  /* Takes the slack under the CTA and centres the socials in it, both axes. */
+  .mobile-menu-foot {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  .mobile-menu-foot p {
+    margin: 0;
+    font-size: 10px;
   }
 
   .mobile-menu ol {
@@ -3866,8 +4175,10 @@ body {
     list-style: none;
   }
 
-  .mobile-menu a,
-  .mobile-menu button {
+  /* Scoped to the list. Unscoped, this also claimed the CTA and the social
+     icons below it and turned them into 30px navigation rows. */
+  .mobile-menu ol a,
+  .mobile-menu ol button {
     display: grid;
     width: 100%;
     grid-template-columns: 42px 1fr;
@@ -3886,7 +4197,7 @@ body {
   .hero {
     gap: 72px;
     min-height: auto;
-    padding: 52px 14px 20px;
+    padding: 52px var(--gutter) 20px;
   }
 
   .hero h1 {
@@ -3904,8 +4215,74 @@ body {
     gap: 12px;
   }
 
+  /*
+   * Read the card, then act on it.
+   *
+   * The buttons live inside `.product-information`, above the photo, so on a
+   * phone you were asked to ADD TO CART while looking at the top half of an
+   * image you had not seen yet.
+   *
+   * 🔴 `display: contents` on the wrapper is what makes this possible. The
+   * actions are nested, so no amount of `order` on `.product-information` can
+   * move them past a sibling of their own parent — the wrapper has to stop
+   * generating a box so its children become grid items of the card itself and
+   * can be ordered independently.
+   *
+   * The wrapper's own flex layout goes with it, which is why the h2 margin is
+   * dropped and the card gap does the spacing instead.
+   */
+  .product-information {
+    display: contents;
+  }
+
+  .product-release,
+  .product-release[data-reversed="true"] {
+    gap: 28px;
+  }
+
+  .product-information h2 {
+    order: 1;
+    margin-bottom: 0;
+  }
+
+  .product-details {
+    order: 2;
+  }
+
+  /* Matched to the `[data-reversed]` rule in the 920px block, which is more
+     specific than a bare `.product-release .product-visual` and would otherwise
+     keep its own order on every second card. */
+  .product-release .product-visual,
+  .product-release[data-reversed="true"] .product-visual {
+    order: 3;
+  }
+
+  .product-actions {
+    order: 4;
+  }
+
   .site-footer {
-    padding-inline: 14px;
+    padding-inline: var(--gutter);
+  }
+
+  /* One centred column on a phone — socials above, copyright under them.
+     Divider kept. */
+  .footer-bottom {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 10px;
+  }
+
+  .footer-copyright {
+    grid-column: 1;
+    order: 2;
+    width: auto;
+  }
+
+  .footer-bottom .social-links {
+    grid-column: 1;
+    order: 1;
+    justify-self: center;
   }
 
   .catalog {

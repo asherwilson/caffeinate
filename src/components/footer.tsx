@@ -1,4 +1,5 @@
 import { SiteMap } from "./site-map";
+import { SocialLinks } from "./social-links";
 
 export function Footer() {
   return (
@@ -49,31 +50,16 @@ export function Footer() {
         <SiteMap />
       </div>
 
+      {/* The row of SHIPPING / RETURNS / PRIVACY / TERMS / CONTACT / INSTAGRAM
+          that used to sit here is gone — every one of those already has an entry
+          in the site map directly above, so it was the same six links twice on
+          one screen. */}
       <div className="footer-bottom">
-        <div className="footer-meta">
-          <p>© 2026 CAFFEINATE®</p>
-          <p>NAV / MOUSE + ARROWS + 01–10 + ⌘K</p>
-        </div>
-        <nav aria-label="Footer navigation">
-          <a className="cursor-pointer" href="/shipping">
-            SHIPPING
-          </a>
-          <a className="cursor-pointer" href="/returns">
-            RETURNS
-          </a>
-          <a className="cursor-pointer" href="/privacy">
-            PRIVACY
-          </a>
-          <a className="cursor-pointer" href="/terms">
-            TERMS
-          </a>
-          <a className="cursor-pointer" href="/contact">
-            CONTACT
-          </a>
-          <a className="cursor-pointer" href="https://instagram.com">
-            INSTAGRAM
-          </a>
-        </nav>
+        {/* The NAV / MOUSE + ARROWS + 01–10 + ⌘K line is gone. The floating
+            `NavigationHint` already teaches those controls, and it knows not to
+            appear on a device that has none of them. */}
+        <p className="footer-copyright">© 2026 CAFFEINATE®</p>
+        <SocialLinks />
       </div>
     </footer>
   );
