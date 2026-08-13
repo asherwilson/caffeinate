@@ -2,7 +2,6 @@ export const siteMap = [
   {
     label: "CAFFEINE",
     links: [
-      ["SHOP", "/shop"],
       ["COFFEE", "/coffee"],
       ["CART", "/cart"],
       ["SEARCH", "/search"],

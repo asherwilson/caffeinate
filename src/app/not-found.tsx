@@ -15,7 +15,7 @@ export default function NotFound() {
           description="THE REQUESTED RESOURCE DOES NOT EXIST, MOVED TO A DIFFERENT ADDRESS, OR WAS NEVER DEPLOYED."
           eyebrow="// ROUTE / NOT_FOUND"
           secondaryAction={
-            <a className="cursor-pointer" href="/shop">
+            <a className="cursor-pointer" href="/coffee">
               BROWSE COFFEE
             </a>
           }

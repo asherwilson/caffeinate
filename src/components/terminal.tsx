@@ -16,7 +16,9 @@ const routes: Record<string, string> = {
   loading: "/loading-preview",
   orders: "/account/orders",
   search: "/search",
-  shop: "/shop",
+  // `/shop` was a duplicate of `/coffee` — same grid, different heading. Kept
+  // as a command alias because it is the word people type.
+  shop: "/coffee",
 };
 
 const themes = [
