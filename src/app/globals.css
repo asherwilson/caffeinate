@@ -1505,6 +1505,10 @@ body {
 
 .interior-page > h1 {
   width: fit-content;
+  /* Guard against a future title longer than the current worst case. Breaking a
+     display word mid-letter is ugly; bleeding off the page is worse. */
+  max-width: 100%;
+  overflow-wrap: break-word;
   margin: 28px 0;
   padding: 2px 0;
   font-size: clamp(68px, 10vw, 156px);
@@ -1965,11 +1969,6 @@ body {
   line-height: 1.35;
 }
 
-.footer-meta {
-  display: grid;
-  gap: 5px;
-}
-
 .navigation-hint {
   position: fixed;
   z-index: 950;
@@ -2249,14 +2248,6 @@ body {
 .footer-map-label,
 .site-map p,
 .site-map a,
-.interior-footer p {
-  width: fit-content;
-  margin: 0;
-  padding: 2px 0;
-  font-size: 11px;
-  line-height: 1.35;
-}
-
 .footer-map-label {
   margin-bottom: 36px;
 }
@@ -2284,36 +2275,6 @@ body {
 .site-map a {
   color: inherit;
   text-decoration: none;
-}
-
-.interior-footer {
-  border-top: 1px solid var(--ink);
-  padding: 72px var(--gutter) 18px;
-}
-
-.interior-footer-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 32px;
-  margin-bottom: 72px;
-}
-
-.interior-footer-heading h2 {
-  margin: 0;
-  font-size: clamp(36px, 6vw, 88px);
-  font-weight: 500;
-  letter-spacing: -0.07em;
-  line-height: 0.84;
-}
-
-.interior-footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  margin-top: 72px;
-  border-top: 1px solid var(--ink);
-  padding-top: 12px;
 }
 
 .page-content {
@@ -4410,8 +4371,20 @@ body {
     padding: 64px 14px;
   }
 
+  /*
+   * 🔴 Sized so the longest title on the site still fits.
+   *
+   * `GET CAFFEINATED.` contains `CAFFEINATED.` — twelve characters with no
+   * break opportunity. In a monospace face that is a fixed multiple of the font
+   * size, so the title cannot reflow its way out of trouble: at 18vw it rendered
+   * 548px wide in a 493px window and bled off the right edge, hidden rather than
+   * scrollable because the body clips overflow.
+   *
+   * 14.5vw keeps that word inside the gutters from 320px up. Raise it and check
+   * `/account` at 320px before shipping — that page is the constraint.
+   */
   .interior-page > h1 {
-    font-size: clamp(58px, 18vw, 90px);
+    font-size: clamp(44px, 14.5vw, 90px);
   }
 
   .store-product-grid,
@@ -4497,16 +4470,6 @@ body {
 
   .site-map {
     gap: 36px;
-  }
-
-  .interior-footer {
-    padding-inline: 14px;
-  }
-
-  .interior-footer-heading,
-  .interior-footer-bottom {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .content-section {
