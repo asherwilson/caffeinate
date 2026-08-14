@@ -7,7 +7,7 @@ export function Footer() {
       <div className="footer-main">
         <section className="footer-callout" aria-labelledby="footer-title">
           <p className="footer-eyebrow">
-            {"// CAFFEINATE® / END_OF_TRANSMISSION"}
+            {"// CAFFEINATE® / SPECIALTY_COFFEE"}
           </p>
           <h2 id="footer-title">
             STAY
@@ -15,12 +15,12 @@ export function Footer() {
             AWAKE.
           </h2>
           <p className="footer-copy">
-            GOOD COFFEE.
+            SMALL-BATCH COFFEE.
             <br />
-            BAD SLEEP SCHEDULE.
+            BUILT FOR LONG SESSIONS.
           </p>
-          <a className="footer-action cursor-pointer" href="/account">
-            GET CAFFEINATED
+          <a className="footer-action cursor-pointer" href="/coffee">
+            SHOP COFFEE
           </a>
         </section>
 

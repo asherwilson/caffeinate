@@ -5,7 +5,7 @@ const products = [
     actions: [40, 41],
     details: 39,
     imageAlt: "Paper coffee bag beside a cup and brewing tools",
-    imageSrc: "/images/image-2.jpg",
+    imageSrc: "/images/image-2.png",
     image: 38,
     name: 37,
     notes: "CHOCOLATE / CARAMEL / BROWN SUGAR",
@@ -19,7 +19,7 @@ const products = [
     actions: [45, 46],
     details: 44,
     imageAlt: "Dark espresso workstation with fresh ground coffee",
-    imageSrc: "/images/image-3.jpg",
+    imageSrc: "/images/image-3.png",
     image: 43,
     name: 42,
     notes: "COCOA / SMOKE / MOLASSES",
@@ -49,7 +49,7 @@ export function Catalog() {
   return (
     <section className="catalog" aria-labelledby="catalog-title">
       <p id="catalog-title" className="catalog-label">
-        {"// AVAILABLE_BUILDS / 03"}
+        {"// CURRENT_COFFEES / 03"}
       </p>
 
       {products.map((product, index) => (
@@ -60,13 +60,13 @@ export function Catalog() {
         >
           <div className="product-information">
             <h2>
-              <span>#{product.number} / RELEASE</span>
+              <span>#{product.number} / ROAST</span>
               {product.title}
             </h2>
             <div className="product-details">
               <p>ROAST / {product.roast}</p>
               <p>NOTES / {product.notes}</p>
-              <p>FORMAT / 340G / WHOLE_BEAN</p>
+              <p>FORMAT / 250G / WHOLE_BEAN</p>
               <p>PRICE / {product.price}</p>
               <p>STATUS / AVAILABLE</p>
             </div>
@@ -75,7 +75,7 @@ export function Catalog() {
                 className="product-action cursor-pointer"
                 href={`/coffee/${product.slug}`}
               >
-                INSPECT
+                VIEW COFFEE
               </a>
               <button className="product-action cursor-pointer" type="button">
                 ADD TO CART

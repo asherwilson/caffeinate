@@ -124,8 +124,8 @@ export function Header({ onOpenTerminal }: HeaderProps) {
           ))}
         </ol>
       </nav>
-      <a className="header-cta cursor-pointer" href="/account">
-        GET CAFFEINATED
+      <a className="header-cta cursor-pointer" href="/coffee">
+        SHOP COFFEE
       </a>
 
       <div className="mobile-header">
@@ -180,8 +180,8 @@ export function Header({ onOpenTerminal }: HeaderProps) {
               is hidden below 580px, so without it here the primary action on
               the entire site is unreachable on mobile except by finding
               ACCOUNT in the list above. */}
-          <a className="mobile-menu-cta cursor-pointer" href="/account">
-            GET CAFFEINATED
+          <a className="mobile-menu-cta cursor-pointer" href="/coffee">
+            SHOP COFFEE
           </a>
 
           <div className="mobile-menu-foot">
