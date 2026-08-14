@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 
 const slides = [
   "/images/image-1.jpg",
-  "/images/image-2.jpg",
-  "/images/image-3.jpg",
+  "/images/image-2.png",
+  "/images/image-3.png",
   "/images/image-4.jpg",
 ];
 

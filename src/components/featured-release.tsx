@@ -3,7 +3,7 @@ import Image from "next/image";
 export function FeaturedRelease() {
   return (
     <section className="featured-release" aria-labelledby="release-title">
-      <p className="release-label">{"// RELEASE_0001 / FEATURED_BUILD"}</p>
+      <p className="release-label">{"// COFFEE_0001 / FEATURED_ROAST"}</p>
 
       <div className="release-image">
         <Image
@@ -12,7 +12,7 @@ export function FeaturedRelease() {
           sizes="100vw"
           src="/images/image-1.jpg"
         />
-        <span>BUILD / 0001</span>
+        <span>ROAST / 0001</span>
       </div>
 
       <div className="release-information">
@@ -23,11 +23,11 @@ export function FeaturedRelease() {
             PROCESS.
           </h2>
           <p>
-            THE DEFAULT BUILD.
+            BALANCED AND SWEET.
             <br />
-            RELIABLE UNDER
+            CHOCOLATE FORWARD.
             <br />
-            UNREASONABLE LOAD.
+            MADE FOR EVERY DAY.
           </p>
         </div>
 
@@ -60,7 +60,7 @@ export function FeaturedRelease() {
           className="release-action cursor-pointer"
           href="/coffee/house-process"
         >
-          INSPECT RELEASE
+          VIEW COFFEE
         </a>
         <button className="release-action cursor-pointer" type="button">
           ADD TO CART
