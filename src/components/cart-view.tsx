@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCart } from "./cart-store";
 import { useCatalog } from "./catalog-store";
 import { useToast } from "./toast-store";
+import { useAppliedDiscount } from "./use-applied-discount";
 
 export function CartView() {
   const { items, removeItem, updateQuantity } = useCart();
@@ -17,6 +18,8 @@ export function CartView() {
     (total, item) => total + item.product.priceCents * item.quantity,
     0,
   );
+  // Priced by the server against these exact items, never computed here.
+  const discount = useAppliedDiscount(availableItems);
   const inventoryBlocked = availableItems.some((item) => {
     const availability = availabilityFor(item.catalogItemId);
     return (
@@ -154,6 +157,15 @@ export function CartView() {
             <dt>SUBTOTAL</dt>
             <dd>${(subtotal / 100).toFixed(2)} CAD</dd>
           </div>
+          {/* 🔑 The proof that a partner link worked. A toast on arrival is
+              easily missed or dismissed; the number changing in the basket is
+              what somebody actually checks before trusting a code. */}
+          {discount ? (
+            <div>
+              <dt>DISCOUNT / {discount.code}</dt>
+              <dd>-${(discount.amountCents / 100).toFixed(2)} CAD</dd>
+            </div>
+          ) : null}
           <div>
             <dt>SHIPPING</dt>
             <dd>CALCULATED NEXT</dd>
@@ -165,7 +177,9 @@ export function CartView() {
         </dl>
         <div className="cart-total">
           <span>ESTIMATED TOTAL</span>
-          <strong>${(subtotal / 100).toFixed(2)} CAD</strong>
+          <strong>
+            ${((subtotal - (discount?.amountCents ?? 0)) / 100).toFixed(2)} CAD
+          </strong>
         </div>
         {inventoryBlocked ? (
           <p className="cart-summary-note">
