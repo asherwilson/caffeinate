@@ -4538,3 +4538,26 @@ body {
     transform: scaleX(1);
   }
 }
+
+
+/* ── Shop state notice ──────────────────────────────────────────────────────
+   Shown only when the shop is closed or taking fake money. Deliberately loud:
+   both states mean an order placed right now will not arrive, and a customer
+   who misses that finds out by waiting for coffee. */
+.shop-notice {
+  padding: 0.55rem 1rem;
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+.shop-notice-closed {
+  background: #2a1216;
+  color: #ff8080;
+  border-bottom: 1px solid #4a1f27;
+}
+.shop-notice-test {
+  background: #2a2210;
+  color: #f5b44a;
+  border-bottom: 1px solid #4a3c1c;
+}

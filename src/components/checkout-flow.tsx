@@ -4,7 +4,8 @@ import type {
   QuickCheckoutResult,
   QuickShippingQuote,
 } from "@quickengine/quick/browser";
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import { partnerCode, partnerDiscountCode } from "@/lib/partner-link";
 import { quickDashClient } from "@/lib/quickdash";
 import { useCart } from "./cart-store";
 import { useCatalog } from "./catalog-store";
@@ -56,6 +57,13 @@ const money = (cents: number) => (cents / 100).toFixed(2);
 
 export function CheckoutFlow() {
   const { clear, items } = useCart();
+  // Read once on mount: a cookie written by the partner-link route.
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  useEffect(() => {
+    setDiscountCode(partnerDiscountCode());
+    setReferralCode(partnerCode());
+  }, []);
   const {
     availabilityFor,
     findProductById,
@@ -182,6 +190,21 @@ export function CheckoutFlow() {
             quantity: item.quantity,
           })),
           shippingRateId: shippingOption.rateId,
+          /**
+           * A code typed into the basket wins over one carried by a link.
+           *
+           * Somebody who has deliberately entered a code expects THAT code to
+           * apply; silently overriding it with one from a link they followed
+           * weeks ago is the kind of thing people notice only after paying.
+           */
+          ...(discountCode ? { discountCode } : {}),
+          /**
+           * Who gets the credit. Separate from the discount because the two
+           * halves of a partner arrangement are independent: a link can
+           * attribute an order without taking anything off it, and a code typed
+           * into the basket discounts without crediting anybody.
+           */
+          ...(referralCode ? { referralCode } : {}),
           shippingAddress: {
             name: `${data.firstName} ${data.lastName}`.trim(),
             line1: data.address,
