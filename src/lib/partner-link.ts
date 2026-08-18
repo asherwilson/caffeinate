@@ -10,11 +10,9 @@
  */
 
 const read = (name: string): string | null => {
-	if (typeof document === "undefined") return null;
-	const match = document.cookie.match(
-		new RegExp(`(?:^|;\\s*)${name}=([^;]*)`),
-	);
-	return match ? decodeURIComponent(match[1]) : null;
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
 };
 
 /** Who gets credit for this order. */
@@ -34,8 +32,11 @@ export const partnerDiscountCode = () => read("caffeinate_discount");
  * carried none, and `null` when nobody just arrived.
  */
 export function takeArrival(): string | null {
-	const value = read("caffeinate_ref_arrived");
-	if (value === null) return null;
-	document.cookie = "caffeinate_ref_arrived=; Path=/; Max-Age=0";
-	return value;
+  const value = read("caffeinate_ref_arrived");
+  if (value === null) return null;
+  // biome-ignore lint/suspicious/noDocumentCookie: the Cookie Store API is not
+  // available in every browser this storefront supports, and expiring a cookie
+  // is the only way to guarantee the greeting shows exactly once.
+  document.cookie = "caffeinate_ref_arrived=; Path=/; Max-Age=0";
+  return value;
 }

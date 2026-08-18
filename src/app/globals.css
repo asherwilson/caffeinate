@@ -4539,7 +4539,6 @@ body {
   }
 }
 
-
 /* ── Shop state notice ──────────────────────────────────────────────────────
    Shown only when the shop is closed or taking fake money. Deliberately loud:
    both states mean an order placed right now will not arrive, and a customer

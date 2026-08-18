@@ -6,10 +6,7 @@ import { CatalogProvider } from "@/components/catalog-store";
 import { CustomerAuthProvider } from "@/components/customer-auth-store";
 import { NavigationHint } from "@/components/navigation-hint";
 import { PartnerArrival } from "@/components/partner-arrival";
-import {
-  ShopNotice,
-  ShopStateProvider,
-} from "@/components/shop-state";
+import { ShopNotice, ShopStateProvider } from "@/components/shop-state";
 import { ToastProvider, ToastViewport } from "@/components/toast-store";
 
 const jetBrainsMono = JetBrains_Mono({
@@ -79,15 +76,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <CatalogProvider>
               <CartProvider>
                 <ShopStateProvider>
-                {/* Above everything: a closed or test shop must be the first
+                  {/* Above everything: a closed or test shop must be the first
                     thing read, not something discovered at checkout. */}
-                <ShopNotice />
-                {children}
-                {/* Inside ToastProvider, and rendering nothing itself: it only
+                  <ShopNotice />
+                  {children}
+                  {/* Inside ToastProvider, and rendering nothing itself: it only
                     consumes the one-shot arrival marker and raises a toast. */}
-                <PartnerArrival />
-                <NavigationHint />
-                <ToastViewport />
+                  <PartnerArrival />
+                  <NavigationHint />
+                  <ToastViewport />
                 </ShopStateProvider>
               </CartProvider>
             </CatalogProvider>

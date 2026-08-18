@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { quickDashClient, quickDashConfigured } from "@/lib/quickdash";
 
 /**
@@ -27,54 +33,54 @@ type ShopState = { published: boolean; environment: "test" | "live" };
 // load while the context request is in flight is worse than one that never says
 // it. The server refuses regardless, so optimism here costs nothing real.
 const ShopStateContext = createContext<ShopState>({
-	environment: "live",
-	published: true,
+  environment: "live",
+  published: true,
 });
 
 export function ShopStateProvider({ children }: { children: ReactNode }) {
-	const [state, setState] = useState<ShopState>({
-		environment: "live",
-		published: true,
-	});
+  const [state, setState] = useState<ShopState>({
+    environment: "live",
+    published: true,
+  });
 
-	useEffect(() => {
-		if (!quickDashConfigured) return;
-		let cancelled = false;
-		void (async () => {
-			try {
-				const { data } = await quickDashClient().site.context();
-				if (cancelled) return;
-				/**
-				 * ⚠️ Narrowed here rather than read straight off the SDK type.
-				 *
-				 * The API returns these two fields today, but the INSTALLED Quick.js
-				 * package predates them — this storefront depends on a published
-				 * version, not the monorepo source. Remove the cast once the SDK
-				 * release carrying `published` and `environment` is installed.
-				 */
-				const workspace = data.workspace as typeof data.workspace & {
-					published?: boolean;
-					environment?: "test" | "live";
-				};
-				setState({
-					environment: workspace.environment ?? "live",
-					published: workspace.published ?? true,
-				});
-			} catch {
-				// An unreachable API is not a closed shop. Leaving the optimistic
-				// default means the customer meets the real error where it happens.
-			}
-		})();
-		return () => {
-			cancelled = true;
-		};
-	}, []);
+  useEffect(() => {
+    if (!quickDashConfigured) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data } = await quickDashClient().site.context();
+        if (cancelled) return;
+        /**
+         * ⚠️ Narrowed here rather than read straight off the SDK type.
+         *
+         * The API returns these two fields today, but the INSTALLED Quick.js
+         * package predates them — this storefront depends on a published
+         * version, not the monorepo source. Remove the cast once the SDK
+         * release carrying `published` and `environment` is installed.
+         */
+        const workspace = data.workspace as typeof data.workspace & {
+          published?: boolean;
+          environment?: "test" | "live";
+        };
+        setState({
+          environment: workspace.environment ?? "live",
+          published: workspace.published ?? true,
+        });
+      } catch {
+        // An unreachable API is not a closed shop. Leaving the optimistic
+        // default means the customer meets the real error where it happens.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-	return (
-		<ShopStateContext.Provider value={state}>
-			{children}
-		</ShopStateContext.Provider>
-	);
+  return (
+    <ShopStateContext.Provider value={state}>
+      {children}
+    </ShopStateContext.Provider>
+  );
 }
 
 export const useShopState = () => useContext(ShopStateContext);
@@ -86,21 +92,21 @@ export const useShopState = () => useContext(ShopStateContext);
  * banner at all, because a bar that is always there stops being read.
  */
 export function ShopNotice() {
-	const { published, environment } = useShopState();
+  const { published, environment } = useShopState();
 
-	if (!published) {
-		return (
-			<div className="shop-notice shop-notice-closed" role="status">
-				THIS SHOP IS CLOSED FOR MAINTENANCE / ORDERS CANNOT BE PLACED RIGHT NOW.
-			</div>
-		);
-	}
-	if (environment === "test") {
-		return (
-			<div className="shop-notice shop-notice-test" role="status">
-				TEST MODE / PAYMENTS ARE NOT REAL AND NO ORDER WILL BE FULFILLED.
-			</div>
-		);
-	}
-	return null;
+  if (!published) {
+    return (
+      <output className="shop-notice shop-notice-closed">
+        THIS SHOP IS CLOSED FOR MAINTENANCE / ORDERS CANNOT BE PLACED RIGHT NOW.
+      </output>
+    );
+  }
+  if (environment === "test") {
+    return (
+      <output className="shop-notice shop-notice-test">
+        TEST MODE / PAYMENTS ARE NOT REAL AND NO ORDER WILL BE FULFILLED.
+      </output>
+    );
+  }
+  return null;
 }

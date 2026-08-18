@@ -20,24 +20,24 @@ import { useToast } from "./toast-store";
  * actually changes — this is only the acknowledgement.
  */
 export function PartnerArrival() {
-	const { pushToast } = useToast();
+  const { pushToast } = useToast();
 
-	useEffect(() => {
-		const discountCode = takeArrival();
-		if (discountCode === null) return;
-		pushToast(
-			discountCode
-				? {
-						code: discountCode,
-						message: `${discountCode} applied — you will see it come off at checkout.`,
-						tone: "success",
-					}
-				: {
-						message: "You arrived through a partner link.",
-						tone: "info",
-					},
-		);
-	}, [pushToast]);
+  useEffect(() => {
+    const discountCode = takeArrival();
+    if (discountCode === null) return;
+    pushToast(
+      discountCode
+        ? {
+            code: discountCode,
+            message: `${discountCode} applied — you will see it come off at checkout.`,
+            tone: "success",
+          }
+        : {
+            message: "You arrived through a partner link.",
+            tone: "info",
+          },
+    );
+  }, [pushToast]);
 
-	return null;
+  return null;
 }

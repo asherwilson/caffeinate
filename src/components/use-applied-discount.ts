@@ -21,52 +21,63 @@ import { quickDashClient } from "@/lib/quickdash";
  * basket fails to render.
  */
 export function useAppliedDiscount(
-	items: ReadonlyArray<{ catalogItemId: string; quantity: number }>,
+  items: ReadonlyArray<{ catalogItemId: string; quantity: number }>,
 ) {
-	const [applied, setApplied] = useState<{
-		code: string;
-		amountCents: number;
-	} | null>(null);
+  const [applied, setApplied] = useState<{
+    code: string;
+    amountCents: number;
+  } | null>(null);
 
-	// Re-priced whenever the basket changes: removing the item a code applied to
-	// must remove the line, not leave a stale saving on screen.
-	const signature = items
-		.map((item) => `${item.catalogItemId}:${item.quantity}`)
-		.join(",");
+  // Re-priced whenever the basket changes: removing the item a code applied to
+  // must remove the line, not leave a stale saving on screen.
+  const signature = items
+    .map((item) => `${item.catalogItemId}:${item.quantity}`)
+    .join(",");
 
-	useEffect(() => {
-		const code = partnerDiscountCode();
-		if (!code || items.length === 0) {
-			setApplied(null);
-			return;
-		}
-		let cancelled = false;
-		void (async () => {
-			try {
-				const { data } = await quickDashClient().site.previewDiscount({
-					code,
-					items: items.map((item) => ({
-						catalogItemId: item.catalogItemId,
-						quantity: item.quantity,
-					})),
-				});
-				if (cancelled) return;
-				// A discriminated union: an invalid code carries a reason, not an
-				// amount, so the narrow is what keeps the two shapes apart.
-				setApplied(
-					data.valid && data.discountCents > 0
-						? { amountCents: data.discountCents, code: data.code }
-						: null,
-				);
-			} catch {
-				if (!cancelled) setApplied(null);
-			}
-		})();
-		return () => {
-			cancelled = true;
-		};
-		// biome-ignore lint/correctness/useExhaustiveDependencies: re-price on basket contents
-	}, [signature]);
+  useEffect(() => {
+    const code = partnerDiscountCode();
+    /**
+     * 🔑 Rebuilt from the signature rather than closing over `items`.
+     *
+     * `items` is a new array on every render, so depending on it re-prices the
+     * basket continuously; depending on the signature while READING `items`
+     * lies to the linter about what the effect uses. Parsing the signature back
+     * makes the dependency honest and the behaviour identical.
+     */
+    const lines = signature
+      .split(",")
+      .filter(Boolean)
+      .map((entry) => {
+        const [catalogItemId, quantity] = entry.split(":");
+        return { catalogItemId, quantity: Number(quantity) };
+      });
+    if (!code || lines.length === 0) {
+      setApplied(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data } = await quickDashClient().site.previewDiscount({
+          code,
+          items: lines,
+        });
+        if (cancelled) return;
+        // A discriminated union: an invalid code carries a reason, not an
+        // amount, so the narrow is what keeps the two shapes apart.
+        setApplied(
+          data.valid && data.discountCents > 0
+            ? { amountCents: data.discountCents, code: data.code }
+            : null,
+        );
+      } catch {
+        if (!cancelled) setApplied(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [signature]);
 
-	return applied;
+  return applied;
 }
