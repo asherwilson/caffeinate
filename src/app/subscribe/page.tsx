@@ -1,14 +1,14 @@
 import { InteriorPage } from "@/components/interior-page";
 import { PageContent } from "@/components/page-content";
+import { SubscriptionPlans } from "@/components/subscription-plans";
 
 /**
- * ⚠️ The offer is real, the billing is not — QuickDash has no recurring
- * charges yet, so there is deliberately no signup button here. A subscribe
- * button that took a one-off payment and quietly never charged again would be
- * the worst possible version of this page.
+ * Recurring billing has landed, so section 05 is the plan picker it was always
+ * meant to be.
  *
- * When recurring billing lands, section 05 becomes the plan picker and this
- * comment goes away.
+ * ⚠️ The picker renders whatever the shop actually offers. With no plans
+ * published it says so plainly rather than showing an empty heading, because an
+ * empty "choose a plan" reads as broken rather than as not-yet-opened.
  */
 export default function SubscribePage() {
   return (
@@ -67,17 +67,9 @@ export default function SubscribePage() {
             ),
           },
           {
-            index: "05 / STATUS",
-            title: "NOT OPEN YET.",
-            body: (
-              <p>
-                Recurring billing is still being built, so there is nothing to
-                sign up to on this page today — we would rather say that than
-                take a payment we cannot repeat properly. Send a note through
-                Contact and you will be first told when it opens. Until then,
-                everything in the shop is available to order one bag at a time.
-              </p>
-            ),
+            index: "05 / STANDING ORDERS",
+            title: "PICK YOUR INTERVAL.",
+            body: <SubscriptionPlans />,
           },
         ]}
       />
