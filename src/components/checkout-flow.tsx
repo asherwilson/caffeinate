@@ -12,6 +12,7 @@ import { useCatalog } from "./catalog-store";
 import { useCustomerAuth } from "./customer-auth-store";
 import { StripePaymentElement } from "./stripe-payment-element";
 import { useToast } from "./toast-store";
+import { useAppliedDiscount } from "./use-applied-discount";
 
 const steps = [
   "ACCESS",
@@ -55,14 +56,49 @@ const initialData: CheckoutData = {
 
 const money = (cents: number) => (cents / 100).toFixed(2);
 
+/**
+ * The only provinces this shop delivers to, as ISO 3166-2 region codes.
+ *
+ * 🔴 QuickDash quotes against the CODE, and its validator caps a region at six
+ * characters — so a shopper typing "Alberta", which is what a shopper actually
+ * types, got a 400 from `/v1/shipping/quote` and could not check out at all.
+ * A list shows the name and submits the code, which makes the wrong answer
+ * unreachable instead of merely discouraged.
+ */
+const CA_PROVINCES = [
+  { code: "AB", name: "ALBERTA" },
+  { code: "BC", name: "BRITISH COLUMBIA" },
+  { code: "MB", name: "MANITOBA" },
+  { code: "NB", name: "NEW BRUNSWICK" },
+  { code: "NL", name: "NEWFOUNDLAND AND LABRADOR" },
+  { code: "NS", name: "NOVA SCOTIA" },
+  { code: "NT", name: "NORTHWEST TERRITORIES" },
+  { code: "NU", name: "NUNAVUT" },
+  { code: "ON", name: "ONTARIO" },
+  { code: "PE", name: "PRINCE EDWARD ISLAND" },
+  { code: "QC", name: "QUEBEC" },
+  { code: "SK", name: "SASKATCHEWAN" },
+  { code: "YT", name: "YUKON" },
+] as const;
+
 export function CheckoutFlow() {
   const { clear, items } = useCart();
   // Read once on mount: a cookie written by the partner-link route.
   const [discountCode, setDiscountCode] = useState<string | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  /**
+   * Buying a standing order rather than a basket.
+   *
+   * 🔑 `/checkout?plan=<id>` from the subscribe page. The plan already says what
+   * is in the box, so the basket is not sent at all — the server refuses both
+   * together, because a plan's price against a basket's contents is how somebody
+   * ends up charged for the wrong thing.
+   */
+  const [planId, setPlanId] = useState<string | null>(null);
   useEffect(() => {
     setDiscountCode(partnerDiscountCode());
     setReferralCode(partnerCode());
+    setPlanId(new URLSearchParams(window.location.search).get("plan"));
   }, []);
   const {
     availabilityFor,
@@ -97,6 +133,21 @@ export function CheckoutFlow() {
     (option) => option.rateId === data.shippingRateId,
   );
   const shipping = shippingOption?.amountCents ?? 0;
+  /**
+   * The same server-priced saving the basket already shows.
+   *
+   * 🔴 Checkout priced its own subtotal and ignored the discount entirely, so a
+   * basket reading $20.40 became a checkout reading $24.00 — while the code was
+   * still sent to the server, which charged the lower figure. Every number a
+   * shopper saw between the basket and the receipt was wrong, and the one place
+   * that mattered contradicted the two around it.
+   *
+   * ⚠️ Priced by `/v1/discounts/preview`, never here. The browser computing a
+   * saving is how a client talks itself into a discount it has not earned.
+   */
+  const appliedDiscount = useAppliedDiscount(availableItems);
+  const discount = appliedDiscount?.amountCents ?? 0;
+  const total = Math.max(0, subtotal - discount) + shipping;
   const currentStep = steps.indexOf(step);
   const inventoryBlocked = availableItems.some((item) => {
     const availability = availabilityFor(item.catalogItemId);
@@ -182,13 +233,24 @@ export function CheckoutFlow() {
     try {
       checkoutAttempt.current ??= crypto.randomUUID();
       const { data: checkout } = await quickDashClient().site.checkout(
+        /**
+         * ⚠️ Cast because the INSTALLED Quick.js package still requires `items`
+         * and does not know `subscriptionPlanId`. The API accepts exactly one of
+         * the two and refuses both. Remove once the SDK release carrying the
+         * optional basket is installed.
+         */
         {
           email: data.email,
           name: `${data.firstName} ${data.lastName}`.trim(),
-          items: availableItems.map((item) => ({
-            catalogItemId: item.catalogItemId,
-            quantity: item.quantity,
-          })),
+          // One or the other, never both.
+          ...(planId
+            ? { subscriptionPlanId: planId }
+            : {
+                items: availableItems.map((item) => ({
+                  catalogItemId: item.catalogItemId,
+                  quantity: item.quantity,
+                })),
+              }),
           shippingRateId: shippingOption.rateId,
           /**
            * A code typed into the basket wins over one carried by a link.
@@ -213,7 +275,9 @@ export function CheckoutFlow() {
             postalCode: data.postalCode,
             countryCode: data.country,
           },
-        },
+        } as Parameters<
+          ReturnType<typeof quickDashClient>["site"]["checkout"]
+        >[0],
         checkoutAttempt.current,
       );
 
@@ -486,13 +550,22 @@ export function CheckoutFlow() {
               required
             />
             <label htmlFor="checkout-province">PROVINCE</label>
-            <input
+            <select
               autoComplete="address-level1"
               defaultValue={data.province}
               id="checkout-province"
               name="province"
               required
-            />
+            >
+              <option disabled value="">
+                SELECT PROVINCE
+              </option>
+              {CA_PROVINCES.map((province) => (
+                <option key={province.code} value={province.code}>
+                  {province.name}
+                </option>
+              ))}
+            </select>
             <label htmlFor="checkout-postal">POSTAL CODE</label>
             <input
               autoComplete="postal-code"
@@ -669,7 +742,7 @@ export function CheckoutFlow() {
                 >
                   {submittingOrder
                     ? "OPENING PAYMENT..."
-                    : `AUTHORIZE $${money(subtotal + shipping)} CAD`}
+                    : `AUTHORIZE $${money(total)} CAD`}
                 </button>
               </div>
             )}
@@ -694,6 +767,12 @@ export function CheckoutFlow() {
             <dt>SUBTOTAL</dt>
             <dd>${money(subtotal)} CAD</dd>
           </div>
+          {appliedDiscount ? (
+            <div>
+              <dt>DISCOUNT / {appliedDiscount.code.toUpperCase()}</dt>
+              <dd>-${money(discount)} CAD</dd>
+            </div>
+          ) : null}
           <div>
             <dt>SHIPPING</dt>
             <dd>${money(shipping)} CAD</dd>
@@ -705,7 +784,7 @@ export function CheckoutFlow() {
         </dl>
         <div className="checkout-total">
           <span>CURRENT TOTAL</span>
-          <strong>${money(subtotal + shipping)} CAD</strong>
+          <strong>${money(total)} CAD</strong>
         </div>
       </aside>
     </div>

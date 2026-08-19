@@ -186,7 +186,10 @@ export function CartView() {
             CHECKOUT BLOCKED / ADJUST ITEMS TO CURRENT STOCK.
           </p>
         ) : (
-          <a className="cart-checkout cursor-pointer" href="/checkout">
+          <a
+            className="header-cta cart-checkout cursor-pointer"
+            href="/checkout"
+          >
             CONTINUE TO CHECKOUT
           </a>
         )}

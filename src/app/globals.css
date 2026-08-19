@@ -1759,11 +1759,14 @@ body {
   line-height: 0.85;
 }
 
+/* Layout only. The cart's primary action wears `.header-cta` in the markup, so
+   its appearance is the header's SHOP COFFEE button by definition rather than
+   by a copy of its declarations that can drift. This rule contributes nothing
+   but where it sits. */
 .cart-checkout {
   display: block;
   width: fit-content;
   margin-top: 36px;
-  padding: 2px 0;
 }
 
 .cart-summary .cart-summary-note {
@@ -4544,6 +4547,12 @@ body {
    both states mean an order placed right now will not arrive, and a customer
    who misses that finds out by waiting for coffee. */
 .shop-notice {
+  /* 🔴 `<output>` is INLINE by default, so the bar shrank to the width of its
+     own text and sat as a stub rather than spanning the page. It stays an
+     `output` because it is announced as a live status; it just has to be told
+     to fill the line. */
+  display: block;
+  width: 100%;
   padding: 0.55rem 1rem;
   text-align: center;
   font-size: 0.7rem;
@@ -4559,4 +4568,56 @@ body {
   background: #2a2210;
   color: #f5b44a;
   border-bottom: 1px solid #4a3c1c;
+}
+
+/* ── Subscription plans ─────────────────────────────────────────────────────
+   Cards rather than a list: a standing order is a commitment, and it deserves
+   more room than a line of text. */
+.plan-list {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  margin-top: 0.5rem;
+}
+.plan-card {
+  border: 1px solid var(--rule, #2a2a2a);
+  padding: 1rem;
+}
+.plan-name {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+.plan-price {
+  margin-top: 0.35rem;
+  font-size: 1.1rem;
+}
+.plan-price span {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+.plan-contents {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+.plan-action {
+  display: block;
+  margin-top: 0.9rem;
+  padding: 0.55rem;
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+}
+
+/* 🔴 Beats `.cart-summary a`, which is why this button was cream on cream.
+   That rule sets `color: inherit` at specificity (0,1,1); every rule giving the
+   button its text colour is a single class at (0,1,0), so the generic one won
+   and the label took the page's own ink on top of an ink fill. The hover state
+   survived only because `.cart-checkout:hover` is (0,2,0) — which is exactly
+   why the label appeared on hover and vanished again. Two classes here restore
+   the base state without touching either rule. */
+.cart-summary .cart-checkout {
+  color: var(--paper);
 }
