@@ -18,6 +18,13 @@ import { quickDashClient, quickDashConfigured } from "@/lib/quickdash";
 
 type CustomerSession = { email: string; provider: "email" };
 
+export type CustomerReferral = {
+  code: string;
+  totalReferrals: number;
+  /** 🔴 What they have EARNED, in cents. Never what an order was worth. */
+  totalEarnedCents: number;
+};
+
 export type CustomerConversation = {
   id: string;
   subject: string;
@@ -67,8 +74,26 @@ type CustomerAuthContextValue = {
   createMessage: (subject: string, body: string) => Promise<void>;
   getMessage: (id: string) => Promise<CustomerMessage[]>;
   getOrder: (id: string) => Promise<QuickCustomerOrderDetail>;
+  /**
+   * Everything below needs a customer session and throws without one.
+   *
+   * ⚠️ They live here rather than in the components that use them because the
+   * session token is in localStorage and exactly one module should know that.
+   * A component reaching for the key directly is a component that will still be
+   * reaching for it after the key changes.
+   */
+  createReferral: () => Promise<string>;
+  createReview: (input: {
+    catalogItemId: string;
+    rating: number;
+    body?: string | null;
+  }) => Promise<{ status: string; verifiedPurchase: boolean }>;
+  getReferral: () => Promise<CustomerReferral | null>;
   listMessages: () => Promise<CustomerConversation[]>;
   listOrders: () => Promise<QuickOrder[]>;
+  listWishlist: () => Promise<string[]>;
+  removeWishlistItem: (catalogItemId: string) => Promise<void>;
+  saveWishlistItem: (catalogItemId: string) => Promise<void>;
   loading: boolean;
   replyToMessage: (id: string, body: string) => Promise<void>;
   requestSignInLink: (email: string) => Promise<void>;
@@ -129,6 +154,51 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         if (!token) throw new Error("Customer sign-in is required.");
         const { data } = await quickDashClient(token).customer.getOrder(id);
         return data;
+      },
+      createReferral: async () => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        const { data } = await quickDashClient(token).customer.createReferral();
+        return data.code;
+      },
+      createReview: async (input) => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        const { data } = await quickDashClient(token).customer.createReview({
+          catalogItemId: input.catalogItemId,
+          rating: input.rating,
+          body: input.body ?? null,
+        });
+        return {
+          status: data.status,
+          verifiedPurchase: data.verifiedPurchase,
+        };
+      },
+      getReferral: async () => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        const { data } = await quickDashClient(token).customer.getReferral();
+        return data.referral;
+      },
+      listWishlist: async () => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        const { data } = await quickDashClient(token).customer.listWishlist();
+        // Only the ids: the catalog already holds everything else, and a second
+        // copy of a price is a second price that can disagree with the first.
+        return data.items.map((item) => item.catalogItemId);
+      },
+      removeWishlistItem: async (catalogItemId) => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        await quickDashClient(token).customer.removeWishlistItem(catalogItemId);
+      },
+      saveWishlistItem: async (catalogItemId) => {
+        const token = window.localStorage.getItem(tokenStorageKey);
+        if (!token) throw new Error("Customer sign-in is required.");
+        await quickDashClient(token).customer.saveWishlistItem({
+          catalogItemId,
+        });
       },
       listMessages: async () => {
         const token = window.localStorage.getItem(tokenStorageKey);

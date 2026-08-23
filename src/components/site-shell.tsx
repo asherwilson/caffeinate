@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { BackgroundProcess } from "./background-process";
 import { BrewProtocol } from "./brew-protocol";
-import { Catalog } from "./catalog";
 import { FeaturedRelease } from "./featured-release";
 import { Footer } from "./footer";
 import { Header } from "./header";
@@ -31,7 +30,16 @@ export function SiteShell() {
     <div className="site-shell" ref={navigationRef}>
       <Header onOpenTerminal={() => setTerminalOpen(true)} />
       <Hero />
-      <Catalog />
+      {/*
+       * 🔴 A hardcoded grid of three coffees used to render HERE, on every
+       * page of the site, above the real content. That is what a shopper
+       * actually saw: fake products with fake prices, a fake weight and a
+       * stock photograph, each linking to a slug the catalog never had.
+       *
+       * The home page lists real products through `LaunchMenu`, and the
+       * shop page lists all of them through `ProductGrid`. Neither needs a
+       * second copy drawn from a file.
+       */}
       <FeaturedRelease />
       <BrewProtocol />
       <BackgroundProcess />

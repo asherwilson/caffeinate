@@ -5,7 +5,11 @@ import type {
   QuickShippingQuote,
 } from "@quickengine/quick/browser";
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { partnerCode, partnerDiscountCode } from "@/lib/partner-link";
+import {
+  forgetPartnerDiscount,
+  partnerCode,
+  partnerDiscountCode,
+} from "@/lib/partner-link";
 import { quickDashClient } from "@/lib/quickdash";
 import { useCart } from "./cart-store";
 import { useCatalog } from "./catalog-store";
@@ -95,16 +99,136 @@ export function CheckoutFlow() {
    * ends up charged for the wrong thing.
    */
   const [planId, setPlanId] = useState<string | null>(null);
+  /**
+   * What the chosen plan actually contains.
+   *
+   * 🔴 Needed to quote SHIPPING. A subscription checkout sends no items — the
+   * plan already knows what it holds — but a parcel still has to be priced to
+   * an address, and the shipping quote is priced from items.
+   *
+   * Without this the subscribe flow could never reach a shipping option, and
+   * the submit guard below refuses to place an order without one. The plan
+   * branch was written, correct, and unreachable.
+   */
+  const [planItems, setPlanItems] = useState<
+    Array<{ catalogItemId: string; quantity: number }>
+  >([]);
+  /**
+   * 🔑 ON MOUNT ONLY, and that is the whole point.
+   *
+   * It reads a cookie a partner link left, validates that code against the cart
+   * as it stands, and reads the chosen plan out of the address. Depending on
+   * `availableItems` would re-run all of it on every cart edit: an API call per
+   * keystroke on a quantity box, and — worse — a discount the shopper
+   * deliberately removed quietly reinstated the moment they change anything.
+   *
+   * ⚠️ The suppression is ONE line on purpose. Wrapped across two, biome
+   * attaches it to the comment underneath rather than to the hook, reports it as
+   * unused, and fails the build while looking entirely correct.
+   */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only; re-running on cart changes would re-apply a discount the shopper removed and call the API on every edit.
   useEffect(() => {
-    setDiscountCode(partnerDiscountCode());
+    /**
+     * 🔴 Checked before it is trusted.
+     *
+     * This code came from a cookie a partner link set, not from anything the
+     * shopper typed. If it is dead, sending it makes the API refuse the whole
+     * order — and the shopper sees "that code isn't recognised" for a code they
+     * never entered and cannot find anywhere on screen to remove.
+     *
+     * So: try it, and if the API will not take it, forget it and let the order
+     * through at full price. A lost discount is a bad afternoon for marketing.
+     * A lost sale is worse, and it is silent.
+     */
+    const linkDiscount = partnerDiscountCode();
+    if (linkDiscount) {
+      void (async () => {
+        try {
+          const { data } = await quickDashClient().site.previewDiscount({
+            code: linkDiscount,
+            items: availableItems.map((item) => ({
+              catalogItemId: item.catalogItemId,
+              quantity: item.quantity,
+            })),
+          });
+          if (data.valid) setDiscountCode(linkDiscount);
+          else forgetPartnerDiscount();
+        } catch {
+          // Cannot tell whether it is good. Do not gamble the order on it.
+          forgetPartnerDiscount();
+        }
+      })();
+    }
     setReferralCode(partnerCode());
-    setPlanId(new URLSearchParams(window.location.search).get("plan"));
+    const chosen = new URLSearchParams(window.location.search).get("plan");
+    setPlanId(chosen);
+    if (!chosen) return;
+    /**
+     * The plan's own contents, so a subscription can be shipped somewhere.
+     *
+     * ⚠️ A direct call rather than an SDK method, matching `subscription-plans`.
+     * The INSTALLED Quick.js package predates `listSubscriptionPlans` — this
+     * storefront depends on a published version, not the monorepo source. Swap
+     * both to the SDK method once the release carrying it is installed.
+     */
+    void (async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_QUICKDASH_API_URL}/v1/subscription-plans`,
+          {
+            headers: {
+              "QuickEngine-Workspace":
+                process.env.NEXT_PUBLIC_QUICKDASH_WORKSPACE_ID ?? "",
+              "QuickEngine-Publishable-Key":
+                process.env.NEXT_PUBLIC_QUICKDASH_SITE_KEY ?? "",
+            },
+          },
+        );
+        if (!response.ok) return;
+        const body = (await response.json()) as {
+          data?: {
+            items?: Array<{
+              id: string;
+              items?: Array<{ catalogItemId: string; quantity: number }>;
+            }>;
+          };
+        };
+        const plan = body.data?.items?.find((entry) => entry.id === chosen);
+        setPlanItems(
+          (plan?.items ?? []).map((item) => ({
+            catalogItemId: item.catalogItemId,
+            quantity: item.quantity,
+          })),
+        );
+      } catch {
+        // A plan whose contents cannot be read still checks out; it simply
+        // cannot be shipped, and the shipping step says so rather than failing
+        // silently at submit.
+      }
+    })();
   }, []);
   const {
     availabilityFor,
     findProductById,
     loading: catalogLoading,
+    products,
   } = useCatalog();
+
+  /**
+   * What this basket is priced in.
+   *
+   * 🔴 Read from the catalog, never written into the markup. Every total on
+   * this page used to end in a literal "CAD", so the day this shop sells to
+   * anybody outside Canada the checkout would confidently label a US-dollar
+   * total as Canadian — a customer being told the wrong currency at the moment
+   * they authorise a payment.
+   *
+   * ⚠️ Falls back to the first product's currency, then to CAD, because a
+   * currency has to say SOMETHING and an empty string beside a number is worse
+   * than a wrong guess nobody can act on. A workspace sells in one currency
+   * today; when that stops being true this becomes the order's currency.
+   */
+  const currency = products[0]?.currency ?? "CAD";
   const { session } = useCustomerAuth();
   const { pushToast } = useToast();
   const [step, setStep] = useState<Step>("ACCESS");
@@ -193,10 +317,14 @@ export function CheckoutFlow() {
     setShippingLoading(true);
     try {
       const { data: quote } = await quickDashClient().site.quoteShipping({
-        items: availableItems.map((item) => ({
-          catalogItemId: item.catalogItemId,
-          quantity: item.quantity,
-        })),
+        // ⚠️ A subscription has no cart. Its parcel is the plan's contents, and
+        // it still has to be delivered to an address like anything else.
+        items: planId
+          ? planItems
+          : availableItems.map((item) => ({
+              catalogItemId: item.catalogItemId,
+              quantity: item.quantity,
+            })),
         destination: {
           countryCode: nextData.country,
           regionCode: nextData.province,
@@ -377,7 +505,22 @@ export function CheckoutFlow() {
     );
   }
 
-  if (availableItems.length === 0) {
+  /**
+   * 🔴 A subscription checkout carries NO ITEMS, deliberately.
+   *
+   * The API refuses `items` and `subscriptionPlanId` in the same request — a
+   * plan already knows what it contains — so a plan checkout arrives with an
+   * empty cart by design.
+   *
+   * This guard did not know that, so every subscription attempt hit
+   * "CHECKOUT_BLOCKED / NO ORDER PAYLOAD" and told the customer to add a coffee
+   * they were not buying. The plan branch below was fully implemented and
+   * completely unreachable: the subscribe button had never once worked.
+   *
+   * ⚠️ `planId` is read from the query string, so this must stay AFTER the
+   * effect that reads it or the first render blocks a valid checkout.
+   */
+  if (availableItems.length === 0 && !planId) {
     return (
       <section className="empty-state">
         <p>STATUS / CHECKOUT_BLOCKED</p>
@@ -629,7 +772,7 @@ export function CheckoutFlow() {
                       option.estimatedDaysMax !== null
                         ? `${option.estimatedDaysMin}–${option.estimatedDaysMax} BUSINESS DAYS / `
                         : ""}
-                      ${money(option.amountCents)} CAD
+                      ${money(option.amountCents)} {currency}
                     </small>
                   </span>
                 </label>
@@ -707,7 +850,7 @@ export function CheckoutFlow() {
                 <dt>SHIPPING</dt>
                 <dd>
                   {shippingOption?.name.toUpperCase() ?? "SELECTED RATE"} / $
-                  {money(shipping)} CAD
+                  {money(shipping)} {currency}
                 </dd>
               </div>
               <div>
@@ -742,7 +885,7 @@ export function CheckoutFlow() {
                 >
                   {submittingOrder
                     ? "OPENING PAYMENT..."
-                    : `AUTHORIZE $${money(total)} CAD`}
+                    : `AUTHORIZE $${money(total)} ${currency}`}
                 </button>
               </div>
             )}
@@ -765,17 +908,23 @@ export function CheckoutFlow() {
         <dl>
           <div>
             <dt>SUBTOTAL</dt>
-            <dd>${money(subtotal)} CAD</dd>
+            <dd>
+              ${money(subtotal)} {currency}
+            </dd>
           </div>
           {appliedDiscount ? (
             <div>
               <dt>DISCOUNT / {appliedDiscount.code.toUpperCase()}</dt>
-              <dd>-${money(discount)} CAD</dd>
+              <dd>
+                -${money(discount)} {currency}
+              </dd>
             </div>
           ) : null}
           <div>
             <dt>SHIPPING</dt>
-            <dd>${money(shipping)} CAD</dd>
+            <dd>
+              ${money(shipping)} {currency}
+            </dd>
           </div>
           <div>
             <dt>TAX</dt>
@@ -784,7 +933,9 @@ export function CheckoutFlow() {
         </dl>
         <div className="checkout-total">
           <span>CURRENT TOTAL</span>
-          <strong>${money(total)} CAD</strong>
+          <strong>
+            ${money(total)} {currency}
+          </strong>
         </div>
       </aside>
     </div>

@@ -1,4 +1,5 @@
 import { HeroBackdrop } from "./hero-backdrop";
+import { LaunchMenu } from "./launch-menu";
 export function Hero() {
   return (
     <main className="hero">
@@ -34,27 +35,7 @@ export function Hero() {
           </a>
         </div>
       </section>
-
-      <section className="current-build" aria-labelledby="current-build-title">
-        <p id="current-build-title" className="build-label">
-          {"// LAUNCH_MENU"}
-        </p>
-        <a className="cursor-pointer" href="/coffee/house-process">
-          <span>01 HOUSE PROCESS</span>
-          <span>CHOCOLATE / CARAMEL / PANIC</span>
-        </a>
-        <a className="cursor-pointer" href="/coffee/dark-mode">
-          <span>02 DARK MODE</span>
-          <span>SMOKE / COCOA / BAD DECISIONS</span>
-        </a>
-        <a className="cursor-pointer" href="/coffee/hotfix">
-          <span>03 HOTFIX</span>
-          <span>CITRUS / HONEY / 4:37 AM</span>
-        </a>
-        <p className="build-status">
-          STATUS / THREE_ROASTS / 250G / WHOLE_BEAN
-        </p>
-      </section>
+      <LaunchMenu />
     </main>
   );
 }

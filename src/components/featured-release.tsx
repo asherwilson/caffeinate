@@ -1,17 +1,15 @@
-import Image from "next/image";
-
 export function FeaturedRelease() {
   return (
     <section className="featured-release" aria-labelledby="release-title">
       <p className="release-label">{"// COFFEE_0001 / FEATURED_ROAST"}</p>
 
       <div className="release-image">
-        <Image
-          alt="Espresso resting on a dark textured table"
-          fill
-          sizes="100vw"
-          src="/images/image-1.jpg"
-        />
+        {/*
+         * 🔴 A stock photograph used to sit here, presented as this
+         * business's own. Removed rather than replaced: marketing imagery
+         * is chosen, and until it is chosen an empty frame is the truth.
+         */}
+        <div className="featured-release-image-empty" />
         <span>ROAST / 0001</span>
       </div>
 
@@ -56,10 +54,7 @@ export function FeaturedRelease() {
       </div>
 
       <div className="release-actions">
-        <a
-          className="release-action cursor-pointer"
-          href="/coffee/house-process"
-        >
+        <a className="release-action cursor-pointer" href="/coffee">
           VIEW COFFEE
         </a>
         <button className="release-action cursor-pointer" type="button">

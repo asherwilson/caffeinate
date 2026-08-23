@@ -3,12 +3,17 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-const slides = [
-  "/images/image-1.jpg",
-  "/images/image-2.png",
-  "/images/image-3.png",
-  "/images/image-4.jpg",
-];
+/**
+ * 🔴 Emptied deliberately, 2026-08-22.
+ *
+ * These were stock photographs of coffee that was never for sale, shown as
+ * though they were this business's own. Marketing imagery belongs in the
+ * content module and will be chosen rather than inherited from a template.
+ *
+ * An empty list renders no backdrop, which is honest. A stock photo of
+ * somebody else's roastery is not.
+ */
+const backdrops: string[] = [];
 
 const INTERVAL = 6500;
 
@@ -33,7 +38,7 @@ export function HeroBackdrop() {
     if (stillness.matches) return;
 
     const timer = window.setInterval(
-      () => setIndex((current) => (current + 1) % slides.length),
+      () => setIndex((current) => (current + 1) % backdrops.length),
       INTERVAL,
     );
     return () => window.clearInterval(timer);
@@ -41,7 +46,7 @@ export function HeroBackdrop() {
 
   return (
     <div aria-hidden="true" className="hero-backdrop">
-      {slides.map((src, position) => (
+      {backdrops.map((src, position) => (
         <Image
           alt=""
           className="hero-backdrop-slide"
