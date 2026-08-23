@@ -40,3 +40,22 @@ export function takeArrival(): string | null {
   document.cookie = "caffeinate_ref_arrived=; Path=/; Max-Age=0";
   return value;
 }
+
+/**
+ * Forget a discount that arrived on a link and turns out to be dead.
+ *
+ * 🔴 A code the CUSTOMER typed must fail loudly — they chose it and need to
+ * know it did not apply. A code that arrived silently in a cookie is different:
+ * they never asked for it, cannot see it, and have no way to remove it. Letting
+ * one refuse the whole order means a marketing link that expired last month
+ * quietly stops every visitor who ever followed it from buying anything.
+ *
+ * That is exactly what happened on 2026-08-22: checkout answered 400 with
+ * "that code isn't recognised" and there was no field on screen to clear.
+ */
+export function forgetPartnerDiscount(): void {
+	if (typeof document === "undefined") return;
+	// biome-ignore lint/suspicious/noDocumentCookie: matches `takeArrival` above;
+	// the Cookie Store API is not available in every supported browser.
+	document.cookie = "caffeinate_discount=; Path=/; Max-Age=0";
+}

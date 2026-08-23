@@ -10,17 +10,34 @@ import {
   useState,
 } from "react";
 import {
-  fallbackProducts,
-  presentationFor,
   productSlug,
+  roastFromTags,
   type StoreProduct,
 } from "@/lib/products";
 import { quickDashClient, quickDashConfigured } from "@/lib/quickdash";
+
+export type StoreCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  itemCount: number;
+};
 
 type CatalogContextValue = {
   availabilityFor: (
     catalogItemId: string,
   ) => QuickCatalogAvailability | undefined;
+  /**
+   * The categories a shopper may browse by, from QuickDash.
+   *
+   * ⚠️ Only visible ones with something in them. A category a business created
+   * and never filled is not a section of a shop, it is a note to themselves,
+   * and showing it produces a click that leads to an empty page.
+   */
+  categories: StoreCategory[];
+  /** Which products are in a category, by slug. Empty until asked. */
+  productsInCategory: (slug: string) => StoreProduct[] | undefined;
   connected: boolean;
   findProduct: (slug: string) => StoreProduct | undefined;
   findProductById: (catalogItemId: string) => StoreProduct | undefined;
@@ -31,11 +48,21 @@ type CatalogContextValue = {
 const CatalogContext = createContext<CatalogContextValue | null>(null);
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<StoreProduct[]>(
-    quickDashConfigured ? [] : fallbackProducts,
-  );
+  /**
+   * 🔴 Starts EMPTY, always.
+   *
+   * It used to start with three hardcoded coffees whenever QuickDash was not
+   * configured, which meant a misconfigured storefront looked like a working
+   * one selling products that do not exist. An empty shop that says so is the
+   * honest failure; a fake shop is the dangerous one.
+   */
+  const [products, setProducts] = useState<StoreProduct[]>([]);
   const [loading, setLoading] = useState(quickDashConfigured);
   const [connected, setConnected] = useState(false);
+  const [categories, setCategories] = useState<StoreCategory[]>([]);
+  const [categoryItems, setCategoryItems] = useState<Map<string, string[]>>(
+    new Map(),
+  );
   const [availability, setAvailability] = useState<
     Map<string, QuickCatalogAvailability>
   >(new Map());
@@ -49,20 +76,44 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       .then(async ({ data }) => {
         const liveProducts = data.items.flatMap((item) => {
           if (item.priceCents === null) return [];
-          const slug = productSlug(item.name);
-          const presentation = presentationFor(slug);
+          const metadata = (item.metadata ?? {}) as {
+            slug?: unknown;
+            featured?: unknown;
+            tags?: unknown;
+            images?: unknown;
+            compareAtPriceCents?: unknown;
+          };
+          /**
+           * 🔴 The catalog's OWN slug wins.
+           *
+           * Deriving it from the name is only a fallback for a product that has
+           * never been given one: a derived slug changes the moment somebody
+           * renames a product, silently breaking every link a customer saved.
+           */
+          const slug =
+            typeof metadata.slug === "string" && metadata.slug.trim()
+              ? metadata.slug.trim()
+              : productSlug(item.name);
+          const images = Array.isArray(metadata.images) ? metadata.images : [];
+          const image =
+            typeof images[0] === "string" && images[0].trim() ? images[0] : null;
           return [
             {
               catalogItemId: item.id,
+              compareAtPriceCents:
+                typeof metadata.compareAtPriceCents === "number"
+                  ? metadata.compareAtPriceCents
+                  : null,
               currency: item.currency,
-              description:
-                item.description ?? presentation?.description ?? item.name,
-              image: presentation?.image ?? "/images/image-1.jpg",
+              description: item.description ?? item.name,
+              featured: metadata.featured === true,
+              image,
               name: item.name,
               priceCents: item.priceCents,
-              roast: presentation?.roast ?? "COFFEE",
+              roast: roastFromTags(metadata.tags),
               sku: item.sku,
               slug,
+              unitLabel: item.unitLabel ?? null,
               weightGrams: item.weightGrams,
             },
           ];
@@ -70,6 +121,47 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         const { data: liveAvailability } = await client.site.availability(
           liveProducts.map((product) => product.catalogItemId),
         );
+        /**
+         * 🔴 Fetched with the catalog, not on demand.
+         *
+         * A shopper who lands on a category link should not watch a second
+         * spinner after the first one finishes. There are rarely more than a
+         * few dozen categories and the response is small.
+         *
+         * ⚠️ Failure here must not take the CATALOG down with it. A shop with
+         * no browsing sections still sells; a shop with no products does not.
+         */
+        try {
+          const { data: liveCategories } = await client.site.listCategories();
+          const visible = liveCategories.items.filter(
+            (category) => category.visible && category.itemCount > 0,
+          );
+          setCategories(
+            visible.map((category) => ({
+              id: category.id,
+              name: category.name,
+              slug: category.slug,
+              description:
+                typeof category.description === "string"
+                  ? category.description
+                  : null,
+              itemCount: category.itemCount,
+            })),
+          );
+          const memberships = await Promise.all(
+            visible.map(async (category) => {
+              const { data } = await client.site.listCategoryItems(
+                category.slug,
+              );
+              return [category.slug, data.itemIds] as const;
+            }),
+          );
+          setCategoryItems(new Map(memberships));
+        } catch {
+          setCategories([]);
+          setCategoryItems(new Map());
+        }
+
         setProducts(liveProducts);
         setAvailability(
           new Map(liveAvailability.map((item) => [item.catalogItemId, item])),
@@ -87,7 +179,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CatalogContextValue>(
     () => ({
       availabilityFor: (catalogItemId) => availability.get(catalogItemId),
+      categories,
       connected,
+      productsInCategory: (slug: string) => {
+        const ids = categoryItems.get(slug);
+        if (!ids) return undefined;
+        const inCategory = new Set(ids);
+        return products.filter((product) =>
+          inCategory.has(product.catalogItemId),
+        );
+      },
       findProduct: (slug) => products.find((product) => product.slug === slug),
       findProductById: (catalogItemId) =>
         products.find((product) => product.catalogItemId === catalogItemId),

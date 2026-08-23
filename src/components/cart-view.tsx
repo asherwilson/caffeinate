@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { formatWeight } from "@/lib/products";
 import { useCart } from "./cart-store";
 import { useCatalog } from "./catalog-store";
 import { useToast } from "./toast-store";
@@ -67,7 +68,11 @@ export function CartView() {
                 className="cart-item-image cursor-pointer"
                 href={`/coffee/${product.slug}`}
               >
-                <Image alt="" fill sizes="120px" src={product.image} />
+                {product.image ? (
+                  <Image alt="" fill sizes="120px" src={product.image} />
+                ) : (
+                  <div className="cart-item-image-empty" />
+                )}
               </a>
               <div className="cart-item-information">
                 <p>COFFEE / {product.roast}</p>
@@ -79,8 +84,22 @@ export function CartView() {
                     {product.name}
                   </a>
                 </h2>
-                <p>340G / WHOLE BEAN</p>
-                <p>${(product.priceCents / 100).toFixed(2)} CAD / UNIT</p>
+                {/*
+                 * 🔴 From the catalog. This was a literal, so every line in
+                 * every cart said "340G / WHOLE BEAN" — including a 1kg bag,
+                 * and including products that are not beans at all.
+                 */}
+                {formatWeight(product.weightGrams) || product.unitLabel ? (
+                  <p>
+                    {[
+                      formatWeight(product.weightGrams),
+                      product.unitLabel?.toUpperCase(),
+                    ]
+                      .filter(Boolean)
+                      .join(" / ")}
+                  </p>
+                ) : null}
+                <p>${(product.priceCents / 100).toFixed(2)} {product.currency} / UNIT</p>
                 <p>STATUS / {unavailable ? "SOLD OUT" : "STOCK VERIFIED"}</p>
               </div>
               <div className="cart-item-controls">

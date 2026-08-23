@@ -1,11 +1,32 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
+import { formatWeight } from "@/lib/products";
 import { AddToCart } from "./add-to-cart";
 import { useCatalog } from "./catalog-store";
+import { WishlistButton } from "./wishlist-button";
 
 export function ProductGrid() {
-  const { availabilityFor, connected, loading, products } = useCatalog();
+  const {
+    availabilityFor,
+    categories,
+    connected,
+    loading,
+    products: allProducts,
+    productsInCategory,
+  } = useCatalog();
+  const [category, setCategory] = useState<string | null>(null);
+
+  /**
+   * ⚠️ An unknown category shows EVERYTHING rather than nothing.
+   *
+   * A stale link — a category renamed or emptied since somebody bookmarked it
+   * — should land a shopper in the shop, not on a blank page that reads like
+   * the business has closed.
+   */
+  const products =
+    (category ? productsInCategory(category) : undefined) ?? allProducts;
   if (loading) {
     return (
       <section className="empty-state">
@@ -30,6 +51,34 @@ export function ProductGrid() {
   }
 
   return (
+    <>
+      {/*
+       * 🔴 Only shown when there is a real choice to make. One category is not
+       * a filter, it is the whole shop with an extra button that does nothing.
+       */}
+      {categories.length > 1 ? (
+        <nav className="store-category-filter" aria-label="Product categories">
+          <button
+            aria-pressed={category === null}
+            className="cursor-pointer"
+            onClick={() => setCategory(null)}
+            type="button"
+          >
+            ALL / {allProducts.length}
+          </button>
+          {categories.map((entry) => (
+            <button
+              aria-pressed={category === entry.slug}
+              className="cursor-pointer"
+              key={entry.id}
+              onClick={() => setCategory(entry.slug)}
+              type="button"
+            >
+              {entry.name.toUpperCase()} / {entry.itemCount}
+            </button>
+          ))}
+        </nav>
+      ) : null}
     <div className="store-product-grid">
       <p className="sr-only" aria-live="polite">
         Catalog connected to QuickDash
@@ -56,13 +105,18 @@ export function ProductGrid() {
               className="store-product-image cursor-pointer"
               href={`/coffee/${product.slug}`}
             >
-              <Image
-                alt={product.name}
-                fill
-                loading={index === 0 ? "eager" : "lazy"}
-                sizes="(max-width: 720px) 100vw, 33vw"
-                src={product.image}
-              />
+              {/* No photograph shows an empty frame, never another shop's coffee. */}
+              {product.image ? (
+                <Image
+                  alt={product.name}
+                  fill
+                  loading={index === 0 ? "eager" : "lazy"}
+                  sizes="(max-width: 720px) 100vw, 33vw"
+                  src={product.image}
+                />
+              ) : (
+                <div className="store-product-image-empty">NO IMAGE</div>
+              )}
             </a>
             <p>#{String(index + 1).padStart(2, "0")} / RELEASE</p>
             <h2>
@@ -70,9 +124,17 @@ export function ProductGrid() {
                 {product.name}
               </a>
             </h2>
-            <p>{product.roast}</p>
+            {product.roast ? <p>{product.roast}</p> : null}
+            {/*
+             * 🔴 The weight comes from the catalog. This line used to end in
+             * a literal "340G", so every product advertised 340g whatever it
+             * actually weighed — a 1kg bag included.
+             */}
             <p>
-              ${(product.priceCents / 100).toFixed(2)} {product.currency} / 340G
+              ${(product.priceCents / 100).toFixed(2)} {product.currency}
+              {formatWeight(product.weightGrams)
+                ? ` / ${formatWeight(product.weightGrams)}`
+                : ""}
             </p>
             <p>STATUS / {stockLabel}</p>
             <div className="store-product-actions">
@@ -80,10 +142,12 @@ export function ProductGrid() {
                 INSPECT
               </a>
               <AddToCart slug={product.slug} />
+              <WishlistButton catalogItemId={product.catalogItemId} />
             </div>
           </article>
         );
       })}
     </div>
+    </>
   );
 }

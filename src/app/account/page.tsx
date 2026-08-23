@@ -1,5 +1,6 @@
 import { AccountAccess } from "@/components/account-access";
 import { InteriorPage } from "@/components/interior-page";
+import { ReferralPanel } from "@/components/referral-panel";
 
 export default function AccountPage() {
   return (
@@ -9,6 +10,7 @@ export default function AccountPage() {
       title="GET CAFFEINATED."
     >
       <AccountAccess />
+      <ReferralPanel />
     </InteriorPage>
   );
 }
