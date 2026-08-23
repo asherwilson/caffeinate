@@ -33,33 +33,55 @@ function ConfirmationForm({ amountLabel, onConfirmed }: ConfirmationFormProps) {
 
     setError(null);
     setSubmitting(true);
-    const result = await stripe.confirmPayment({
-      elements,
-      redirect: "if_required",
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout/complete`,
-      },
-    });
+    /**
+     * 🔴 `confirmPayment` can THROW, not merely return `{ error }`.
+     *
+     * Without this the button read "CONFIRMING PAYMENT..." for ever: the promise
+     * rejected, nothing reset `submitting`, and the shopper was left on a
+     * spinner with no message and no way back. It happened for real — Stripe
+     * answered 403 loading the intent, so no element mounted, and confirming
+     * against unmounted elements throws `IntegrationError`.
+     *
+     * ⚠️ A payment page that can hang is worse than one that fails. Somebody
+     * watching a spinner does not know whether they have been charged, and the
+     * next thing they do is press it again.
+     */
+    try {
+      const result = await stripe.confirmPayment({
+        elements,
+        redirect: "if_required",
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout/complete`,
+        },
+      });
 
-    if (result.error) {
+      if (result.error) {
+        setError(
+          result.error.message ??
+            "Stripe could not confirm this card. Check the details and try again.",
+        );
+        setSubmitting(false);
+        return;
+      }
+
+      if (
+        result.paymentIntent?.status === "succeeded" ||
+        result.paymentIntent?.status === "processing"
+      ) {
+        onConfirmed();
+        return;
+      }
+
+      setError("Payment needs another action before it can be confirmed.");
+      setSubmitting(false);
+    } catch (thrown) {
       setError(
-        result.error.message ??
-          "Stripe could not confirm this card. Check the details and try again.",
+        thrown instanceof Error && thrown.message
+          ? thrown.message
+          : "Payment could not be started. Refresh the page and try again.",
       );
       setSubmitting(false);
-      return;
     }
-
-    if (
-      result.paymentIntent?.status === "succeeded" ||
-      result.paymentIntent?.status === "processing"
-    ) {
-      onConfirmed();
-      return;
-    }
-
-    setError("Payment needs another action before it can be confirmed.");
-    setSubmitting(false);
   };
 
   return (

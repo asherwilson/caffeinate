@@ -928,15 +928,33 @@ export function CheckoutFlow() {
           </div>
           <div>
             <dt>TAX</dt>
-            <dd>CALCULATED BY API</dd>
+            <dd>ADDED AT PAYMENT</dd>
           </div>
         </dl>
+        {/*
+         * 🔴 "BEFORE TAX", not "TOTAL".
+         *
+         * This said CURRENT TOTAL and showed $12.50 while the card was charged
+         * $13.12 — the 5% the shop is registered for. A line labelled TOTAL that
+         * is not the total is the single worst thing a checkout can show: the
+         * shopper agreed to one number and their statement says another, and
+         * every one of those becomes a support message or a chargeback.
+         *
+         * ⚠️ The honest fix is a server-priced quote, because tax belongs to the
+         * business's settings and must never be computed twice. Until that
+         * endpoint exists this says plainly what it is, and the pay button
+         * already shows the real total the API returned.
+         */}
         <div className="checkout-total">
-          <span>CURRENT TOTAL</span>
+          <span>BEFORE TAX</span>
           <strong>
             ${money(total)} {currency}
           </strong>
         </div>
+        <p className="checkout-total-note">
+          TAX IS ADDED WHEN YOU PAY. THE PAY BUTTON SHOWS THE FULL AMOUNT YOU
+          WILL BE CHARGED.
+        </p>
       </aside>
     </div>
   );
