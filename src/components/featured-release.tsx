@@ -1,4 +1,3 @@
-
 export function FeaturedRelease() {
   return (
     <section className="featured-release" aria-labelledby="release-title">
@@ -55,10 +54,7 @@ export function FeaturedRelease() {
       </div>
 
       <div className="release-actions">
-        <a
-          className="release-action cursor-pointer"
-          href="/coffee"
-        >
+        <a className="release-action cursor-pointer" href="/coffee">
           VIEW COFFEE
         </a>
         <button className="release-action cursor-pointer" type="button">

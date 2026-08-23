@@ -51,7 +51,7 @@ export function ProductReviews({ catalogItemId }: { catalogItemId: string }) {
       .finally(() => setLoading(false));
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reload when the product changes
+  // Reload when the product changes, and only then.
   useEffect(load, [catalogItemId]);
 
   const submit = async () => {
@@ -85,7 +85,8 @@ export function ProductReviews({ catalogItemId }: { catalogItemId: string }) {
     }
   };
 
-  if (loading) return <p className="product-reviews-status">LOADING REVIEWS…</p>;
+  if (loading)
+    return <p className="product-reviews-status">LOADING REVIEWS…</p>;
 
   return (
     <section className="product-reviews" aria-label="Reviews">

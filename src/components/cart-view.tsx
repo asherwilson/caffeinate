@@ -99,7 +99,10 @@ export function CartView() {
                       .join(" / ")}
                   </p>
                 ) : null}
-                <p>${(product.priceCents / 100).toFixed(2)} {product.currency} / UNIT</p>
+                <p>
+                  ${(product.priceCents / 100).toFixed(2)} {product.currency} /
+                  UNIT
+                </p>
                 <p>STATUS / {unavailable ? "SOLD OUT" : "STOCK VERIFIED"}</p>
               </div>
               <div className="cart-item-controls">

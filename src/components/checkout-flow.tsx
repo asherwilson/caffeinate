@@ -113,6 +113,20 @@ export function CheckoutFlow() {
   const [planItems, setPlanItems] = useState<
     Array<{ catalogItemId: string; quantity: number }>
   >([]);
+  /**
+   * 🔑 ON MOUNT ONLY, and that is the whole point.
+   *
+   * It reads a cookie a partner link left, validates that code against the cart
+   * as it stands, and reads the chosen plan out of the address. Depending on
+   * `availableItems` would re-run all of it on every cart edit: an API call per
+   * keystroke on a quantity box, and — worse — a discount the shopper
+   * deliberately removed quietly reinstated the moment they change anything.
+   *
+   * ⚠️ The suppression is ONE line on purpose. Wrapped across two, biome
+   * attaches it to the comment underneath rather than to the hook, reports it as
+   * unused, and fails the build while looking entirely correct.
+   */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only; re-running on cart changes would re-apply a discount the shopper removed and call the API on every edit.
   useEffect(() => {
     /**
      * 🔴 Checked before it is trusted.
@@ -894,17 +908,23 @@ export function CheckoutFlow() {
         <dl>
           <div>
             <dt>SUBTOTAL</dt>
-            <dd>${money(subtotal)} {currency}</dd>
+            <dd>
+              ${money(subtotal)} {currency}
+            </dd>
           </div>
           {appliedDiscount ? (
             <div>
               <dt>DISCOUNT / {appliedDiscount.code.toUpperCase()}</dt>
-              <dd>-${money(discount)} {currency}</dd>
+              <dd>
+                -${money(discount)} {currency}
+              </dd>
             </div>
           ) : null}
           <div>
             <dt>SHIPPING</dt>
-            <dd>${money(shipping)} {currency}</dd>
+            <dd>
+              ${money(shipping)} {currency}
+            </dd>
           </div>
           <div>
             <dt>TAX</dt>
@@ -913,7 +933,9 @@ export function CheckoutFlow() {
         </dl>
         <div className="checkout-total">
           <span>CURRENT TOTAL</span>
-          <strong>${money(total)} {currency}</strong>
+          <strong>
+            ${money(total)} {currency}
+          </strong>
         </div>
       </aside>
     </div>

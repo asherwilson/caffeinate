@@ -79,75 +79,75 @@ export function ProductGrid() {
           ))}
         </nav>
       ) : null}
-    <div className="store-product-grid">
-      <p className="sr-only" aria-live="polite">
-        Catalog connected to QuickDash
-      </p>
-      {products.map((product, index) => {
-        const availability = availabilityFor(product.catalogItemId);
-        const stockLabel = !availability?.tracked
-          ? "AVAILABLE"
-          : !availability.available
-            ? "SOLD OUT"
-            : availability.availableQuantity !== null &&
-                availability.availableQuantity <= 5
-              ? `LOW STOCK / ${availability.availableQuantity}`
-              : "IN STOCK";
-        return (
-          <article
-            className="store-product"
-            data-availability={
-              availability?.available === false ? "sold-out" : "available"
-            }
-            key={product.catalogItemId}
-          >
-            <a
-              className="store-product-image cursor-pointer"
-              href={`/coffee/${product.slug}`}
+      <div className="store-product-grid">
+        <p className="sr-only" aria-live="polite">
+          Catalog connected to QuickDash
+        </p>
+        {products.map((product, index) => {
+          const availability = availabilityFor(product.catalogItemId);
+          const stockLabel = !availability?.tracked
+            ? "AVAILABLE"
+            : !availability.available
+              ? "SOLD OUT"
+              : availability.availableQuantity !== null &&
+                  availability.availableQuantity <= 5
+                ? `LOW STOCK / ${availability.availableQuantity}`
+                : "IN STOCK";
+          return (
+            <article
+              className="store-product"
+              data-availability={
+                availability?.available === false ? "sold-out" : "available"
+              }
+              key={product.catalogItemId}
             >
-              {/* No photograph shows an empty frame, never another shop's coffee. */}
-              {product.image ? (
-                <Image
-                  alt={product.name}
-                  fill
-                  loading={index === 0 ? "eager" : "lazy"}
-                  sizes="(max-width: 720px) 100vw, 33vw"
-                  src={product.image}
-                />
-              ) : (
-                <div className="store-product-image-empty">NO IMAGE</div>
-              )}
-            </a>
-            <p>#{String(index + 1).padStart(2, "0")} / RELEASE</p>
-            <h2>
-              <a className="cursor-pointer" href={`/coffee/${product.slug}`}>
-                {product.name}
+              <a
+                className="store-product-image cursor-pointer"
+                href={`/coffee/${product.slug}`}
+              >
+                {/* No photograph shows an empty frame, never another shop's coffee. */}
+                {product.image ? (
+                  <Image
+                    alt={product.name}
+                    fill
+                    loading={index === 0 ? "eager" : "lazy"}
+                    sizes="(max-width: 720px) 100vw, 33vw"
+                    src={product.image}
+                  />
+                ) : (
+                  <div className="store-product-image-empty">NO IMAGE</div>
+                )}
               </a>
-            </h2>
-            {product.roast ? <p>{product.roast}</p> : null}
-            {/*
-             * 🔴 The weight comes from the catalog. This line used to end in
-             * a literal "340G", so every product advertised 340g whatever it
-             * actually weighed — a 1kg bag included.
-             */}
-            <p>
-              ${(product.priceCents / 100).toFixed(2)} {product.currency}
-              {formatWeight(product.weightGrams)
-                ? ` / ${formatWeight(product.weightGrams)}`
-                : ""}
-            </p>
-            <p>STATUS / {stockLabel}</p>
-            <div className="store-product-actions">
-              <a className="cursor-pointer" href={`/coffee/${product.slug}`}>
-                INSPECT
-              </a>
-              <AddToCart slug={product.slug} />
-              <WishlistButton catalogItemId={product.catalogItemId} />
-            </div>
-          </article>
-        );
-      })}
-    </div>
+              <p>#{String(index + 1).padStart(2, "0")} / RELEASE</p>
+              <h2>
+                <a className="cursor-pointer" href={`/coffee/${product.slug}`}>
+                  {product.name}
+                </a>
+              </h2>
+              {product.roast ? <p>{product.roast}</p> : null}
+              {/*
+               * 🔴 The weight comes from the catalog. This line used to end in
+               * a literal "340G", so every product advertised 340g whatever it
+               * actually weighed — a 1kg bag included.
+               */}
+              <p>
+                ${(product.priceCents / 100).toFixed(2)} {product.currency}
+                {formatWeight(product.weightGrams)
+                  ? ` / ${formatWeight(product.weightGrams)}`
+                  : ""}
+              </p>
+              <p>STATUS / {stockLabel}</p>
+              <div className="store-product-actions">
+                <a className="cursor-pointer" href={`/coffee/${product.slug}`}>
+                  INSPECT
+                </a>
+                <AddToCart slug={product.slug} />
+                <WishlistButton catalogItemId={product.catalogItemId} />
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </>
   );
 }

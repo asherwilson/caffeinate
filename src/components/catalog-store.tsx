@@ -9,11 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import {
-  productSlug,
-  roastFromTags,
-  type StoreProduct,
-} from "@/lib/products";
+import { productSlug, roastFromTags, type StoreProduct } from "@/lib/products";
 import { quickDashClient, quickDashConfigured } from "@/lib/quickdash";
 
 export type StoreCategory = {
@@ -96,7 +92,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
               : productSlug(item.name);
           const images = Array.isArray(metadata.images) ? metadata.images : [];
           const image =
-            typeof images[0] === "string" && images[0].trim() ? images[0] : null;
+            typeof images[0] === "string" && images[0].trim()
+              ? images[0]
+              : null;
           return [
             {
               catalogItemId: item.id,
@@ -195,7 +193,17 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       loading,
       products,
     }),
-    [availability, connected, loading, products],
+    /**
+     * ⚠️ `categories` and `categoryItems` belong here even though the screen
+     * looks right without them.
+     *
+     * They are set in the same handler as `products`, so React batches the
+     * updates and the memo happens to recompute with fresh values. That is an
+     * accident of timing, not a guarantee — the day categories load from their
+     * own request they would never appear at all, and nothing about the code
+     * would look wrong.
+     */
+    [availability, categories, categoryItems, connected, loading, products],
   );
 
   return (

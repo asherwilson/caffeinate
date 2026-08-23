@@ -34,9 +34,10 @@ export const partnerDiscountCode = () => read("caffeinate_discount");
 export function takeArrival(): string | null {
   const value = read("caffeinate_ref_arrived");
   if (value === null) return null;
-  // biome-ignore lint/suspicious/noDocumentCookie: the Cookie Store API is not
-  // available in every browser this storefront supports, and expiring a cookie
-  // is the only way to guarantee the greeting shows exactly once.
+  // ⚠️ One line, deliberately. A wrapped `biome-ignore` suppresses the COMMENT
+  // on the next line rather than the statement below it, so the reason reads
+  // nicely and the rule fires anyway.
+  // biome-ignore lint/suspicious/noDocumentCookie: the Cookie Store API is not available in every browser this storefront supports, and expiring a cookie is the only way to guarantee the greeting shows exactly once.
   document.cookie = "caffeinate_ref_arrived=; Path=/; Max-Age=0";
   return value;
 }
@@ -54,8 +55,7 @@ export function takeArrival(): string | null {
  * "that code isn't recognised" and there was no field on screen to clear.
  */
 export function forgetPartnerDiscount(): void {
-	if (typeof document === "undefined") return;
-	// biome-ignore lint/suspicious/noDocumentCookie: matches `takeArrival` above;
-	// the Cookie Store API is not available in every supported browser.
-	document.cookie = "caffeinate_discount=; Path=/; Max-Age=0";
+  if (typeof document === "undefined") return;
+  // biome-ignore lint/suspicious/noDocumentCookie: matches `takeArrival` above; the Cookie Store API is not available in every supported browser.
+  document.cookie = "caffeinate_discount=; Path=/; Max-Age=0";
 }
