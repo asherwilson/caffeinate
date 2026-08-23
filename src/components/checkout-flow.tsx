@@ -17,6 +17,7 @@ import { useCustomerAuth } from "./customer-auth-store";
 import { StripePaymentElement } from "./stripe-payment-element";
 import { useToast } from "./toast-store";
 import { useAppliedDiscount } from "./use-applied-discount";
+import { useCheckoutQuote } from "./use-checkout-quote";
 
 const steps = [
   "ACCESS",
@@ -271,7 +272,44 @@ export function CheckoutFlow() {
    */
   const appliedDiscount = useAppliedDiscount(availableItems);
   const discount = appliedDiscount?.amountCents ?? 0;
-  const total = Math.max(0, subtotal - discount) + shipping;
+  /**
+   * 🔴 The TOTAL comes from the server, because tax cannot come from anywhere
+   * else.
+   *
+   * Tax is a workspace setting applied to the discounted subtotal plus delivery,
+   * and a browser has no way to know it. So checkout used to add up what it
+   * could — `subtotal − discount + shipping` — label it TOTAL, and charge
+   * something larger: $12.50 on screen, $13.12 on the card.
+   *
+   * A button carrying an amount is the moment somebody CONSENTS. A different
+   * amount leaving their account is a support message at best and a chargeback
+   * at worst, and the customer is right both times.
+   *
+   * ⚠️ Computing tax here instead would work today, at one flat rate, and
+   * silently charge the wrong amount the day it becomes per-jurisdiction — which
+   * is the direction every tax system moves.
+   */
+  const quote = useCheckoutQuote({
+    items: availableItems,
+    discountCode: appliedDiscount?.code ?? null,
+    shippingRateId: data.shippingRateId,
+    // Built from the fields the form actually holds. Only the three the quote
+    // prices on are needed — country, province and postcode decide both the
+    // rate and the tax.
+    shippingAddress: {
+      name: `${data.firstName} ${data.lastName}`.trim(),
+      line1: data.address,
+      city: data.city,
+      region: data.province,
+      postalCode: data.postalCode,
+      countryCode: data.country,
+    },
+  });
+  const tax = quote?.taxCents ?? null;
+  // Falls back to the pre-tax sum only while the quote is in flight, and the
+  // interface says so rather than passing it off as the total.
+  const total =
+    quote?.totalCents ?? Math.max(0, subtotal - discount) + shipping;
   const currentStep = steps.indexOf(step);
   const inventoryBlocked = availableItems.some((item) => {
     const availability = availabilityFor(item.catalogItemId);
@@ -877,15 +915,25 @@ export function CheckoutFlow() {
                 >
                   BACK
                 </button>
+                {/*
+                 * 🔴 Not clickable until the server has priced it.
+                 *
+                 * This button IS the consent — its label is the amount somebody
+                 * agrees to. Letting it be pressed while the quote is in flight
+                 * would let them authorise a pre-tax figure, which is the exact
+                 * mismatch this whole change exists to remove.
+                 */}
                 <button
                   className="cursor-pointer"
-                  disabled={submittingOrder}
+                  disabled={submittingOrder || tax === null}
                   onClick={startPayment}
                   type="button"
                 >
                   {submittingOrder
                     ? "OPENING PAYMENT..."
-                    : `AUTHORIZE $${money(total)} ${currency}`}
+                    : tax === null
+                      ? "WORKING OUT YOUR TOTAL..."
+                      : `AUTHORIZE $${money(total)} ${currency}`}
                 </button>
               </div>
             )}
@@ -928,33 +976,42 @@ export function CheckoutFlow() {
           </div>
           <div>
             <dt>TAX</dt>
-            <dd>ADDED AT PAYMENT</dd>
+            <dd>
+              {tax === null ? (
+                "CALCULATING"
+              ) : (
+                <>
+                  ${money(tax)} {currency}
+                </>
+              )}
+            </dd>
           </div>
         </dl>
         {/*
-         * 🔴 "BEFORE TAX", not "TOTAL".
+         * 🔴 The real total, priced by the server.
          *
          * This said CURRENT TOTAL and showed $12.50 while the card was charged
          * $13.12 — the 5% the shop is registered for. A line labelled TOTAL that
-         * is not the total is the single worst thing a checkout can show: the
-         * shopper agreed to one number and their statement says another, and
-         * every one of those becomes a support message or a chargeback.
+         * is not the total is the worst thing a checkout can show: the shopper
+         * agreed to one number and their statement says another, and every one
+         * of those becomes a support message or a chargeback.
          *
-         * ⚠️ The honest fix is a server-priced quote, because tax belongs to the
-         * business's settings and must never be computed twice. Until that
-         * endpoint exists this says plainly what it is, and the pay button
-         * already shows the real total the API returned.
+         * ⚠️ While the quote is in flight it says so, rather than showing a
+         * pre-tax figure dressed up as the total. A number that is briefly
+         * missing is honest; a number that is briefly wrong is not.
          */}
         <div className="checkout-total">
-          <span>BEFORE TAX</span>
+          <span>{tax === null ? "TOTAL / PENDING" : "TOTAL"}</span>
           <strong>
             ${money(total)} {currency}
           </strong>
         </div>
-        <p className="checkout-total-note">
-          TAX IS ADDED WHEN YOU PAY. THE PAY BUTTON SHOWS THE FULL AMOUNT YOU
-          WILL BE CHARGED.
-        </p>
+        {tax === null ? (
+          <p className="checkout-total-note">
+            WORKING OUT TAX FOR YOUR ADDRESS. THE PAY BUTTON SHOWS THE FULL
+            AMOUNT YOU WILL BE CHARGED.
+          </p>
+        ) : null}
       </aside>
     </div>
   );
