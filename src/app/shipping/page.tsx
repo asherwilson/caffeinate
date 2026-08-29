@@ -1,45 +1,43 @@
+"use client";
+
+import { useContent } from "@/components/content-store";
 import { InteriorPage } from "@/components/interior-page";
 import { PageContent } from "@/components/page-content";
 
+/**
+ * 🔑 Every word on this page is a content slot, with the copy this file used to
+ * hold as its fallback — so it renders identically until somebody edits it, and
+ * clearing a slot puts the original back.
+ *
+ * ⚠️ The section INDEX ("01 / PURPOSE") stays in code. It is the page's
+ * numbering scheme rather than its words, and letting it be edited to anything
+ * would let the list stop counting.
+ */
 export default function ShippingPage() {
+  const content = useContent();
+
   return (
     <InteriorPage
-      description="ROASTED, PACKED, AND DISPATCHED WITH A TRACEABLE ROUTE."
-      eyebrow="// SHIPPING / DELIVERY_PROTOCOL"
-      title={"DELIVERY PROTOCOL."}
+      description={content("shipping.description")}
+      eyebrow={content("shipping.eyebrow")}
+      title={content("shipping.title")}
     >
       <PageContent
         sections={[
           {
+            body: <p>{content("shipping.s1.body")}</p>,
             index: "01 / PROCESS",
-            title: "ROAST THEN ROUTE.",
-            body: (
-              <p>
-                Orders enter the next available roast and fulfillment cycle.
-                Tracking is transmitted when the carrier accepts the package.
-              </p>
-            ),
+            title: content("shipping.s1.title"),
           },
           {
+            body: <p>{content("shipping.s2.body")}</p>,
             index: "02 / COVERAGE",
-            title: "CANADA FIRST.",
-            body: (
-              <p>
-                Initial service covers Canadian addresses. Rates and delivery
-                estimates are calculated at checkout from the actual
-                destination.
-              </p>
-            ),
+            title: content("shipping.s2.title"),
           },
           {
+            body: <p>{content("shipping.s3.body")}</p>,
             index: "03 / DAMAGE",
-            title: "REPORT A BAD PACKET.",
-            body: (
-              <p>
-                If a shipment arrives damaged or incorrect, send the order
-                number and photographs through Contact within seven days.
-              </p>
-            ),
+            title: content("shipping.s3.title"),
           },
         ]}
       />

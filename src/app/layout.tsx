@@ -3,11 +3,13 @@ import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/cart-store";
 import { CatalogProvider } from "@/components/catalog-store";
+import { ContentProvider } from "@/components/content-store";
 import { CustomerAuthProvider } from "@/components/customer-auth-store";
 import { NavigationHint } from "@/components/navigation-hint";
 import { PartnerArrival } from "@/components/partner-arrival";
 import { ShopNotice, ShopStateProvider } from "@/components/shop-state";
 import { ToastProvider, ToastViewport } from "@/components/toast-store";
+import { loadContent } from "@/lib/content";
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -51,7 +53,17 @@ try {
 } catch (e) {}
 `;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/**
+ * 🔑 `async`, so the owner's words are fetched on the SERVER and arrive inside
+ * the HTML — no flash of the shipped copy, and a crawler indexes what was
+ * actually written.
+ *
+ * ⚠️ One fetch per render for the whole site, not per component. Every editable
+ * line on every page reads from the provider below.
+ */
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const content = await loadContent();
+
   return (
     // `suppressHydrationWarning` because the script below sets `data-slide`
     // here before React hydrates, so the server markup and the live DOM
@@ -71,25 +83,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         */}
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string with no interpolation, and it must run before paint */}
         <script dangerouslySetInnerHTML={{ __html: slideDirectionScript }} />
-        <ToastProvider>
-          <CustomerAuthProvider>
-            <CatalogProvider>
-              <CartProvider>
-                <ShopStateProvider>
-                  {/* Above everything: a closed or test shop must be the first
+        <ContentProvider content={content}>
+          <ToastProvider>
+            <CustomerAuthProvider>
+              <CatalogProvider>
+                <CartProvider>
+                  <ShopStateProvider>
+                    {/* Above everything: a closed or test shop must be the first
                     thing read, not something discovered at checkout. */}
-                  <ShopNotice />
-                  {children}
-                  {/* Inside ToastProvider, and rendering nothing itself: it only
+                    <ShopNotice />
+                    {children}
+                    {/* Inside ToastProvider, and rendering nothing itself: it only
                     consumes the one-shot arrival marker and raises a toast. */}
-                  <PartnerArrival />
-                  <NavigationHint />
-                  <ToastViewport />
-                </ShopStateProvider>
-              </CartProvider>
-            </CatalogProvider>
-          </CustomerAuthProvider>
-        </ToastProvider>
+                    <PartnerArrival />
+                    <NavigationHint />
+                    <ToastViewport />
+                  </ShopStateProvider>
+                </CartProvider>
+              </CatalogProvider>
+            </CustomerAuthProvider>
+          </ToastProvider>
+        </ContentProvider>
       </body>
     </html>
   );

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useContent } from "./content-store";
 
 const roasts = ["ROTATING", "HOUSE", "DARK", "LIGHT"] as const;
 const intervals = ["2 WEEKS", "3 WEEKS", "4 WEEKS"] as const;
 const quantities = ["1 BAG", "2 BAGS", "3 BAGS"] as const;
 
 export function BackgroundProcess() {
+  const content = useContent();
   const [roast, setRoast] = useState(0);
   const [interval, setInterval] = useState(1);
   const [quantity, setQuantity] = useState(0);
@@ -16,18 +18,12 @@ export function BackgroundProcess() {
     <section className="background-process" aria-labelledby="process-title">
       <div className="process-interface">
         <div className="process-configuration">
-          <p className="process-label">
-            {"// BACKGROUND_PROCESS / RECURRING_DELIVERY"}
-          </p>
-          <h2 id="process-title">
-            NEVER RUN
-            <br />
-            OUT AGAIN.
+          <p className="process-label">{content("home.subscribe.label")}</p>
+          <h2 id="process-title" style={{ whiteSpace: "pre-line" }}>
+            {content("home.subscribe.title")}
           </h2>
-          <p className="process-copy">
-            COFFEE ARRIVES BEFORE
-            <br />
-            YOUR SUPPLY REACHES ZERO.
+          <p className="process-copy" style={{ whiteSpace: "pre-line" }}>
+            {content("home.subscribe.copy")}
           </p>
 
           <fieldset className="process-options">
@@ -105,7 +101,7 @@ export function BackgroundProcess() {
       </div>
 
       <button className="process-action cursor-pointer" type="button">
-        START PROCESS
+        {content("home.subscribe.cta")}
       </button>
     </section>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useContent } from "./content-store";
 
 const methods = [
   {
@@ -46,6 +47,7 @@ const methods = [
 ] as const;
 
 export function BrewProtocol() {
+  const content = useContent();
   const [activeMethod, setActiveMethod] = useState(0);
   const method = methods[activeMethod];
 
@@ -53,17 +55,12 @@ export function BrewProtocol() {
     <section className="brew-protocol" aria-labelledby="brew-title">
       <div className="brew-interface">
         <div className="brew-introduction">
-          <p className="brew-label">{"// BREW_PROTOCOL / SELECT_RUNTIME"}</p>
-          <h2 id="brew-title">
-            COMPILE
-            <br />A BETTER
-            <br />
-            CUP.
+          <p className="brew-label">{content("home.brew.label")}</p>
+          <h2 id="brew-title" style={{ whiteSpace: "pre-line" }}>
+            {content("home.brew.title")}
           </h2>
-          <p className="brew-copy">
-            PICK A RUNTIME.
-            <br />
-            WE&apos;LL HANDLE THE PARAMETERS.
+          <p className="brew-copy" style={{ whiteSpace: "pre-line" }}>
+            {content("home.brew.copy")}
           </p>
 
           <fieldset className="brew-methods">
@@ -116,7 +113,7 @@ export function BrewProtocol() {
       </div>
 
       <a className="brew-action cursor-pointer" href="/coffee">
-        OPEN FULL PROTOCOL
+        {content("home.brew.cta")}
       </a>
     </section>
   );

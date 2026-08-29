@@ -1,46 +1,43 @@
+"use client";
+
+import { useContent } from "@/components/content-store";
 import { InteriorPage } from "@/components/interior-page";
 import { PageContent } from "@/components/page-content";
 
+/**
+ * 🔑 Every word on this page is a content slot, with the copy this file used to
+ * hold as its fallback — so it renders identically until somebody edits it, and
+ * clearing a slot puts the original back.
+ *
+ * ⚠️ The section INDEX ("01 / PURPOSE") stays in code. It is the page's
+ * numbering scheme rather than its words, and letting it be edited to anything
+ * would let the list stop counting.
+ */
 export default function AboutPage() {
+  const content = useContent();
+
   return (
     <InteriorPage
-      description="A SMALL COFFEE SYSTEM FOR PEOPLE WHO REFUSE TO POWER DOWN."
-      eyebrow="// ABOUT / ORIGIN_PROCESS"
-      title={"BUILT FOR UPTIME."}
+      description={content("about.description")}
+      eyebrow={content("about.eyebrow")}
+      title={content("about.title")}
     >
       <PageContent
         sections={[
           {
-            body: (
-              <p>
-                Caffeinate makes direct, useful coffee without the lifestyle
-                monologue. Good beans, clear specifications, repeatable results.
-              </p>
-            ),
+            body: <p>{content("about.s1.body")}</p>,
             index: "01 / PURPOSE",
-            title: "COFFEE IS INFRASTRUCTURE.",
+            title: content("about.s1.title"),
           },
           {
-            body: (
-              <p>
-                We roast in small releases, publish the useful details, and keep
-                the catalog deliberately tight. No mystery blend names. No fake
-                scarcity counters.
-              </p>
-            ),
+            body: <p>{content("about.s2.body")}</p>,
             index: "02 / METHOD",
-            title: "SMALL BATCH. FULL TRACE.",
+            title: content("about.s2.title"),
           },
           {
-            body: (
-              <p>
-                Built in Canada for developers, designers, night operators,
-                early starters, and anyone else whose day begins with a loading
-                screen.
-              </p>
-            ),
+            body: <p>{content("about.s3.body")}</p>,
             index: "03 / USERS",
-            title: "FOR PEOPLE STILL RUNNING.",
+            title: content("about.s3.title"),
           },
         ]}
       />

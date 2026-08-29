@@ -1,120 +1,68 @@
+"use client";
+
+import { useContent } from "@/components/content-store";
 import { InteriorPage } from "@/components/interior-page";
 import { PageContent } from "@/components/page-content";
 
+/**
+ * 🔑 Every word on this page is a content slot, with the copy this file used to
+ * hold as its fallback — so it renders identically until somebody edits it, and
+ * clearing a slot puts the original back.
+ *
+ * ⚠️ The section INDEX ("01 / PURPOSE") stays in code. It is the page's
+ * numbering scheme rather than its words, and letting it be edited to anything
+ * would let the list stop counting.
+ */
 export default function TermsPage() {
+  const content = useContent();
+
   return (
     <InteriorPage
-      description="THE CONDITIONS THAT APPLY TO EVERY ORDER PLACED HERE."
-      eyebrow="// TERMS / SERVICE_AGREEMENT"
-      title={"TERMS OF SERVICE."}
+      description={content("terms.description")}
+      eyebrow={content("terms.eyebrow")}
+      title={content("terms.title")}
     >
       <PageContent
         sections={[
           {
+            body: <p>{content("terms.s1.body")}</p>,
             index: "01 / AGREEMENT",
-            title: "PLACING AN ORDER ACCEPTS THIS.",
-            body: (
-              <p>
-                Browsing, creating an account, or submitting an order means
-                these terms apply to you. If you do not accept them, do not
-                place an order. We may revise these terms; the version published
-                here at the time of your order is the one that governs it.
-              </p>
-            ),
+            title: content("terms.s1.title"),
           },
           {
+            body: <p>{content("terms.s2.body")}</p>,
             index: "02 / ACCOUNTS",
-            title: "ONE SIGN-IN, YOUR RESPONSIBILITY.",
-            body: (
-              <p>
-                Sign-in is passwordless and tied to your email address. You are
-                responsible for activity on your account and for keeping access
-                to that inbox secure. Tell us immediately if you believe someone
-                else is using it. We may suspend an account we reasonably
-                believe is being used for fraud or abuse.
-              </p>
-            ),
+            title: content("terms.s2.title"),
           },
           {
+            body: <p>{content("terms.s3.body")}</p>,
             index: "03 / PRICING",
-            title: "THE SERVER PRICE IS THE PRICE.",
-            body: (
-              <p>
-                Prices, stock, shipping rates, and taxes are calculated by our
-                systems at checkout and are authoritative over anything a cached
-                page may display. All amounts are in Canadian dollars unless
-                stated otherwise. If an order is priced in obvious error, or the
-                item turns out to be unavailable, we may cancel it and refund
-                you in full rather than fulfill it.
-              </p>
-            ),
+            title: content("terms.s3.title"),
           },
           {
+            body: <p>{content("terms.s4.body")}</p>,
             index: "04 / PAYMENT",
-            title: "AUTHORIZED, THEN CAPTURED.",
-            body: (
-              <p>
-                Payments are processed by Stripe. We do not receive or store
-                your full card number. Submitting a payment authorizes the total
-                shown at checkout, including shipping and tax. An order is
-                accepted when payment settles, not when the form is submitted —
-                a confirmation email is an acknowledgement of your request, not
-                a guarantee of fulfillment.
-              </p>
-            ),
+            title: content("terms.s4.title"),
           },
           {
+            body: <p>{content("terms.s5.body")}</p>,
             index: "05 / FULFILLMENT",
-            title: "A PERISHABLE GOOD.",
-            body: (
-              <p>
-                Coffee is roasted to order and dispatched under the terms on the
-                Shipping page. Returns, damage, and defect handling are governed
-                by the Returns page, and both are part of this agreement. Risk
-                of loss passes when the carrier delivers to the address you
-                provided; we are not responsible for an address entered
-                incorrectly.
-              </p>
-            ),
+            title: content("terms.s5.title"),
           },
           {
+            body: <p>{content("terms.s6.body")}</p>,
             index: "06 / CONDUCT",
-            title: "DO NOT BREAK THE SHOP.",
-            body: (
-              <p>
-                Do not attempt to disrupt the service, probe it for
-                vulnerabilities without permission, scrape it at volume, resell
-                access to it, or use it to break the law. Our name, branding,
-                photography, and page copy remain ours and may not be reused
-                without written permission.
-              </p>
-            ),
+            title: content("terms.s6.title"),
           },
           {
+            body: <p>{content("terms.s7.body")}</p>,
             index: "07 / LIABILITY",
-            title: "SOLD AS DESCRIBED.",
-            body: (
-              <p>
-                The store is provided as-is and we do not warrant uninterrupted
-                or error-free operation. Nothing here limits rights you have
-                under applicable consumer-protection law, including any
-                statutory guarantee that cannot be excluded. Subject to that,
-                our liability for any order is limited to the amount you paid
-                for it.
-              </p>
-            ),
+            title: content("terms.s7.title"),
           },
           {
+            body: <p>{content("terms.s8.body")}</p>,
             index: "08 / GOVERNING LAW",
-            title: "CANADIAN LAW APPLIES.",
-            body: (
-              <p>
-                These terms are governed by the laws of Canada and of the
-                province in which the business operates, without regard to
-                conflict-of-law rules. Questions about these terms go through
-                the Contact page.
-              </p>
-            ),
+            title: content("terms.s8.title"),
           },
         ]}
       />

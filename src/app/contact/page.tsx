@@ -1,11 +1,16 @@
+"use client";
+
+import { useContent } from "@/components/content-store";
 import { InteriorPage } from "@/components/interior-page";
 
 export default function ContactPage() {
+  const content = useContent();
+
   return (
     <InteriorPage
-      description="A HUMAN READS EVERY VALID TRANSMISSION."
-      eyebrow="// CONTACT / OPEN_CHANNEL"
-      title="SEND A SIGNAL."
+      description={content("contact.description")}
+      eyebrow={content("contact.eyebrow")}
+      title={content("contact.title")}
     >
       <div className="contact-layout">
         <form className="terminal-form">

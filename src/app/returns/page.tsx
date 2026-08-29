@@ -1,45 +1,43 @@
+"use client";
+
+import { useContent } from "@/components/content-store";
 import { InteriorPage } from "@/components/interior-page";
 import { PageContent } from "@/components/page-content";
 
+/**
+ * 🔑 Every word on this page is a content slot, with the copy this file used to
+ * hold as its fallback — so it renders identically until somebody edits it, and
+ * clearing a slot puts the original back.
+ *
+ * ⚠️ The section INDEX ("01 / PURPOSE") stays in code. It is the page's
+ * numbering scheme rather than its words, and letting it be edited to anything
+ * would let the list stop counting.
+ */
 export default function ReturnsPage() {
+  const content = useContent();
+
   return (
     <InteriorPage
-      description="CLEAR RECOVERY RULES FOR INCORRECT OR DAMAGED OUTPUT."
-      eyebrow="// RETURNS / RECOVERY_PROTOCOL"
-      title={"RECOVERY MODE."}
+      description={content("returns.description")}
+      eyebrow={content("returns.eyebrow")}
+      title={content("returns.title")}
     >
       <PageContent
         sections={[
           {
+            body: <p>{content("returns.s1.body")}</p>,
             index: "01 / COFFEE",
-            title: "PERISHABLE BY DESIGN.",
-            body: (
-              <p>
-                Opened coffee cannot be returned for preference alone. If the
-                coffee or shipment is defective, we will investigate and make it
-                right.
-              </p>
-            ),
+            title: content("returns.s1.title"),
           },
           {
+            body: <p>{content("returns.s2.body")}</p>,
             index: "02 / GEAR",
-            title: "UNUSED HARDWARE.",
-            body: (
-              <p>
-                Unused, unopened non-perishable goods may be eligible for return
-                within thirty days. Return shipping may apply.
-              </p>
-            ),
+            title: content("returns.s2.title"),
           },
           {
+            body: <p>{content("returns.s3.body")}</p>,
             index: "03 / START",
-            title: "OPEN A TICKET.",
-            body: (
-              <p>
-                Contact us with the order number before sending anything back.
-                Unregistered returns cannot be matched to an account.
-              </p>
-            ),
+            title: content("returns.s3.title"),
           },
         ]}
       />

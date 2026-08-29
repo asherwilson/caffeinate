@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "content:register": "tsx scripts/register-content.ts"
   },
   "dependencies": {
     "@quickengine/quick": "^0.1.0",

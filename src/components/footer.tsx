@@ -1,26 +1,24 @@
+"use client";
+
+import { useContent } from "./content-store";
 import { SiteMap } from "./site-map";
 import { SocialLinks } from "./social-links";
 
 export function Footer() {
+  const content = useContent();
   return (
     <footer className="site-footer">
       <div className="footer-main">
         <section className="footer-callout" aria-labelledby="footer-title">
-          <p className="footer-eyebrow">
-            {"// CAFFEINATE® / SPECIALTY_COFFEE"}
-          </p>
-          <h2 id="footer-title">
-            STAY
-            <br />
-            AWAKE.
+          <p className="footer-eyebrow">{content("footer.label")}</p>
+          <h2 id="footer-title" style={{ whiteSpace: "pre-line" }}>
+            {content("footer.title")}
           </h2>
-          <p className="footer-copy">
-            SMALL-BATCH COFFEE.
-            <br />
-            BUILT FOR LONG SESSIONS.
+          <p className="footer-copy" style={{ whiteSpace: "pre-line" }}>
+            {content("footer.copy")}
           </p>
           <a className="footer-action cursor-pointer" href="/coffee">
-            SHOP COFFEE
+            {content("footer.cta")}
           </a>
         </section>
 
@@ -28,15 +26,15 @@ export function Footer() {
           <p id="system-title">% system_status</p>
           <p>
             <span>STATUS /</span>
-            <span>OPERATIONAL</span>
+            <span>{content("footer.status")}</span>
           </p>
           <p>
             <span>ROASTING /</span>
-            <span>CANADA</span>
+            <span>{content("footer.roasting")}</span>
           </p>
           <p>
             <span>SUPPORT /</span>
-            <span>HUMAN</span>
+            <span>{content("footer.support")}</span>
           </p>
           <p>
             <span>BUILD /</span>

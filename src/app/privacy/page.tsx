@@ -1,45 +1,43 @@
+"use client";
+
+import { useContent } from "@/components/content-store";
 import { InteriorPage } from "@/components/interior-page";
 import { PageContent } from "@/components/page-content";
 
+/**
+ * 🔑 Every word on this page is a content slot, with the copy this file used to
+ * hold as its fallback — so it renders identically until somebody edits it, and
+ * clearing a slot puts the original back.
+ *
+ * ⚠️ The section INDEX ("01 / PURPOSE") stays in code. It is the page's
+ * numbering scheme rather than its words, and letting it be edited to anything
+ * would let the list stop counting.
+ */
 export default function PrivacyPage() {
+  const content = useContent();
+
   return (
     <InteriorPage
-      description="THE MINIMUM DATA REQUIRED TO PROCESS THE REQUEST."
-      eyebrow="// PRIVACY / DATA_POLICY"
-      title={"PRIVATE BY DEFAULT."}
+      description={content("privacy.description")}
+      eyebrow={content("privacy.eyebrow")}
+      title={content("privacy.title")}
     >
       <PageContent
         sections={[
           {
+            body: <p>{content("privacy.s1.body")}</p>,
             index: "01 / COLLECTION",
-            title: "ONLY USEFUL INPUT.",
-            body: (
-              <p>
-                We collect information needed to operate accounts, fulfill
-                purchases, prevent abuse, and answer support requests.
-              </p>
-            ),
+            title: content("privacy.s1.title"),
           },
           {
+            body: <p>{content("privacy.s2.body")}</p>,
             index: "02 / PROCESSORS",
-            title: "LIMITED SUBSYSTEMS.",
-            body: (
-              <p>
-                Payment, delivery, analytics, and infrastructure providers
-                receive only the information required to perform their function.
-              </p>
-            ),
+            title: content("privacy.s2.title"),
           },
           {
+            body: <p>{content("privacy.s3.body")}</p>,
             index: "03 / CONTROL",
-            title: "REQUEST ACCESS OR DELETION.",
-            body: (
-              <p>
-                Contact us to request a copy, correction, or deletion of
-                eligible personal information. Legal and fraud-prevention
-                retention may still apply.
-              </p>
-            ),
+            title: content("privacy.s3.title"),
           },
         ]}
       />
