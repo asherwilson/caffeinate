@@ -22,47 +22,47 @@
 import { manifestEntries } from "../src/lib/content-slots";
 
 async function main() {
-	const baseUrl = process.env.NEXT_PUBLIC_QUICKDASH_API_URL;
-	const workspaceId = process.env.NEXT_PUBLIC_QUICKDASH_WORKSPACE_ID;
-	const apiKey = process.env.QUICKDASH_API_KEY;
+  const baseUrl = process.env.NEXT_PUBLIC_QUICKDASH_API_URL;
+  const workspaceId = process.env.NEXT_PUBLIC_QUICKDASH_WORKSPACE_ID;
+  const apiKey = process.env.QUICKDASH_API_KEY;
 
-	if (!baseUrl || !workspaceId) {
-		throw new Error(
-			"NEXT_PUBLIC_QUICKDASH_API_URL and NEXT_PUBLIC_QUICKDASH_WORKSPACE_ID must be set.",
-		);
-	}
-	if (!apiKey) {
-		throw new Error(
-			"QUICKDASH_API_KEY must be set — a server key with catalog:write.",
-		);
-	}
+  if (!baseUrl || !workspaceId) {
+    throw new Error(
+      "NEXT_PUBLIC_QUICKDASH_API_URL and NEXT_PUBLIC_QUICKDASH_WORKSPACE_ID must be set.",
+    );
+  }
+  if (!apiKey) {
+    throw new Error(
+      "QUICKDASH_API_KEY must be set — a server key with catalog:write.",
+    );
+  }
 
-	const entries = manifestEntries();
-	const response = await fetch(`${baseUrl}/v1/content/manage/manifest`, {
-		method: "POST",
-		headers: {
-			"content-type": "application/json",
-			"QuickEngine-Workspace": workspaceId,
-			Authorization: `Bearer ${apiKey}`,
-		},
-		body: JSON.stringify({ slots: entries }),
-	});
+  const entries = manifestEntries();
+  const response = await fetch(`${baseUrl}/v1/content/manage/manifest`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "QuickEngine-Workspace": workspaceId,
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ slots: entries }),
+  });
 
-	if (!response.ok) {
-		// The body carries QuickDash's own message, which names the offending key
-		// for a validation failure. Swallowing it would leave "400" and a guess.
-		throw new Error(
-			`Registration failed (${response.status}): ${await response.text()}`,
-		);
-	}
+  if (!response.ok) {
+    // The body carries QuickDash's own message, which names the offending key
+    // for a validation failure. Swallowing it would leave "400" and a guess.
+    throw new Error(
+      `Registration failed (${response.status}): ${await response.text()}`,
+    );
+  }
 
-	console.log(`Registered ${entries.length} slots.`);
-	for (const entry of entries) {
-		console.log(`  ${entry.group.padEnd(22)} ${entry.label}`);
-	}
+  console.log(`Registered ${entries.length} slots.`);
+  for (const entry of entries) {
+    console.log(`  ${entry.group.padEnd(22)} ${entry.label}`);
+  }
 }
 
 main().catch((error) => {
-	console.error(error instanceof Error ? error.message : error);
-	process.exit(1);
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
 });
