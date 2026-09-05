@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@quickengine/quick':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0(pusher-js@8.6.0)
       '@stripe/react-stripe-js':
         specifier: ^6.8.0
         version: 6.8.0(@stripe/stripe-js@9.13.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -23,6 +23,9 @@ importers:
       next:
         specifier: 16.3.0
         version: 16.3.0(@types/node@20.19.43)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      pusher-js:
+        specifier: ^8.6.0
+        version: 8.6.0
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -366,8 +369,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@quickengine/quick@0.1.0':
-    resolution: {integrity: sha512-KnTMfyKQ+AvvENCeVeQrpTTA2v+08ondqpwjxN+9vLwWfN7dK3RK41PBh0rbmpGAJ5pu0fstfbPFFiyS6TSPxQ==}
+  '@quickengine/quick@0.2.0':
+    resolution: {integrity: sha512-CFj0SdwkQTlzRM1vWl7DYHV5/520nqKlb8Gcj+aYZAsZaLK5ihKQpJ9whJ+bm3W5MTiVGrasr5jCogTK/8kSCA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      pusher-js: '>=8'
+    peerDependenciesMeta:
+      pusher-js:
+        optional: true
 
   '@stripe/react-stripe-js@6.8.0':
     resolution: {integrity: sha512-nRrPkos00CmUeqXHxtJkXmSbl9/6ybGI4jVebzsiA6QaE5A4iw9dn1C4hUx2tBmQQV2e6pm2aLkPYov4hdta2w==}
@@ -649,6 +658,9 @@ packages:
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
 
+  pusher-js@8.6.0:
+    resolution: {integrity: sha512-wShJPfCS/kYkCBVzVW67wa9cnQIgHTszEK2XHNrFkOgGruuGw081aERAxfRjfdFU+WcIt8x6dvbwkTW4iZuQ8Q==}
+
   react-dom@19.2.8:
     resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
     peerDependencies:
@@ -704,6 +716,9 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tweetnacl@1.0.3:
+    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -918,7 +933,9 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.3.0':
     optional: true
 
-  '@quickengine/quick@0.1.0': {}
+  '@quickengine/quick@0.2.0(pusher-js@8.6.0)':
+    optionalDependencies:
+      pusher-js: 8.6.0
 
   '@stripe/react-stripe-js@6.8.0(@stripe/stripe-js@9.13.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
@@ -1148,6 +1165,10 @@ snapshots:
       object-assign: 4.1.1
       react-is: 16.13.1
 
+  pusher-js@8.6.0:
+    dependencies:
+      tweetnacl: 1.0.3
+
   react-dom@19.2.8(react@19.2.8):
     dependencies:
       react: 19.2.8
@@ -1208,6 +1229,8 @@ snapshots:
   tapable@2.3.3: {}
 
   tslib@2.8.1: {}
+
+  tweetnacl@1.0.3: {}
 
   typescript@5.9.3: {}
 

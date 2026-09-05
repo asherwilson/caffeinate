@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { subscribeToCatalog } from "@/lib/catalog-live";
 import { productSlug, roastFromTags, type StoreProduct } from "@/lib/products";
 import { quickDashClient, quickDashConfigured } from "@/lib/quickdash";
 
@@ -67,111 +68,147 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     if (!quickDashConfigured) return;
 
     const client = quickDashClient();
-    client.catalog
-      .list({ limit: 100 })
-      .then(async ({ data }) => {
-        const liveProducts = data.items.flatMap((item) => {
-          if (item.priceCents === null) return [];
-          const metadata = (item.metadata ?? {}) as {
-            slug?: unknown;
-            featured?: unknown;
-            tags?: unknown;
-            images?: unknown;
-            compareAtPriceCents?: unknown;
-          };
-          /**
-           * 🔴 The catalog's OWN slug wins.
-           *
-           * Deriving it from the name is only a fallback for a product that has
-           * never been given one: a derived slug changes the moment somebody
-           * renames a product, silently breaking every link a customer saved.
-           */
-          const slug =
-            typeof metadata.slug === "string" && metadata.slug.trim()
-              ? metadata.slug.trim()
-              : productSlug(item.name);
-          const images = Array.isArray(metadata.images) ? metadata.images : [];
-          const image =
-            typeof images[0] === "string" && images[0].trim()
-              ? images[0]
-              : null;
-          return [
-            {
-              catalogItemId: item.id,
-              compareAtPriceCents:
-                typeof metadata.compareAtPriceCents === "number"
-                  ? metadata.compareAtPriceCents
-                  : null,
-              currency: item.currency,
-              description: item.description ?? item.name,
-              featured: metadata.featured === true,
-              image,
-              name: item.name,
-              priceCents: item.priceCents,
-              roast: roastFromTags(metadata.tags),
-              sku: item.sku,
-              slug,
-              unitLabel: item.unitLabel ?? null,
-              weightGrams: item.weightGrams,
-            },
-          ];
-        });
-        const { data: liveAvailability } = await client.site.availability(
-          liveProducts.map((product) => product.catalogItemId),
-        );
-        /**
-         * 🔴 Fetched with the catalog, not on demand.
-         *
-         * A shopper who lands on a category link should not watch a second
-         * spinner after the first one finishes. There are rarely more than a
-         * few dozen categories and the response is small.
-         *
-         * ⚠️ Failure here must not take the CATALOG down with it. A shop with
-         * no browsing sections still sells; a shop with no products does not.
-         */
-        try {
-          const { data: liveCategories } = await client.site.listCategories();
-          const visible = liveCategories.items.filter(
-            (category) => category.visible && category.itemCount > 0,
-          );
-          setCategories(
-            visible.map((category) => ({
-              id: category.id,
-              name: category.name,
-              slug: category.slug,
-              description:
-                typeof category.description === "string"
-                  ? category.description
-                  : null,
-              itemCount: category.itemCount,
-            })),
-          );
-          const memberships = await Promise.all(
-            visible.map(async (category) => {
-              const { data } = await client.site.listCategoryItems(
-                category.slug,
-              );
-              return [category.slug, data.itemIds] as const;
-            }),
-          );
-          setCategoryItems(new Map(memberships));
-        } catch {
-          setCategories([]);
-          setCategoryItems(new Map());
-        }
+    // Set once the component unmounts, so a refetch that is already in flight
+    // cannot write state into a store nobody is showing any more.
+    let stopped = false;
 
-        setProducts(liveProducts);
-        setAvailability(
-          new Map(liveAvailability.map((item) => [item.catalogItemId, item])),
-        );
-        setConnected(true);
-      })
-      .catch(() => {
-        setProducts([]);
-        setAvailability(new Map());
-        setConnected(false);
-      })
-      .finally(() => setLoading(false));
+    const load = () =>
+      client.catalog
+        .list({ limit: 100 })
+        .then(async ({ data }) => {
+          const liveProducts = data.items.flatMap((item) => {
+            if (item.priceCents === null) return [];
+            const metadata = (item.metadata ?? {}) as {
+              slug?: unknown;
+              featured?: unknown;
+              tags?: unknown;
+              images?: unknown;
+              compareAtPriceCents?: unknown;
+            };
+            /**
+             * 🔴 The catalog's OWN slug wins.
+             *
+             * Deriving it from the name is only a fallback for a product that has
+             * never been given one: a derived slug changes the moment somebody
+             * renames a product, silently breaking every link a customer saved.
+             */
+            const slug =
+              typeof metadata.slug === "string" && metadata.slug.trim()
+                ? metadata.slug.trim()
+                : productSlug(item.name);
+            const images = Array.isArray(metadata.images)
+              ? metadata.images
+              : [];
+            const image =
+              typeof images[0] === "string" && images[0].trim()
+                ? images[0]
+                : null;
+            return [
+              {
+                catalogItemId: item.id,
+                compareAtPriceCents:
+                  typeof metadata.compareAtPriceCents === "number"
+                    ? metadata.compareAtPriceCents
+                    : null,
+                currency: item.currency,
+                description: item.description ?? item.name,
+                featured: metadata.featured === true,
+                image,
+                name: item.name,
+                priceCents: item.priceCents,
+                roast: roastFromTags(metadata.tags),
+                sku: item.sku,
+                slug,
+                unitLabel: item.unitLabel ?? null,
+                weightGrams: item.weightGrams,
+              },
+            ];
+          });
+          const { data: liveAvailability } = await client.site.availability(
+            liveProducts.map((product) => product.catalogItemId),
+          );
+          /**
+           * 🔴 Fetched with the catalog, not on demand.
+           *
+           * A shopper who lands on a category link should not watch a second
+           * spinner after the first one finishes. There are rarely more than a
+           * few dozen categories and the response is small.
+           *
+           * ⚠️ Failure here must not take the CATALOG down with it. A shop with
+           * no browsing sections still sells; a shop with no products does not.
+           */
+          try {
+            const { data: liveCategories } = await client.site.listCategories();
+            const visible = liveCategories.items.filter(
+              (category) => category.visible && category.itemCount > 0,
+            );
+            setCategories(
+              visible.map((category) => ({
+                id: category.id,
+                name: category.name,
+                slug: category.slug,
+                description:
+                  typeof category.description === "string"
+                    ? category.description
+                    : null,
+                itemCount: category.itemCount,
+              })),
+            );
+            const memberships = await Promise.all(
+              visible.map(async (category) => {
+                const { data } = await client.site.listCategoryItems(
+                  category.slug,
+                );
+                return [category.slug, data.itemIds] as const;
+              }),
+            );
+            setCategoryItems(new Map(memberships));
+          } catch {
+            setCategories([]);
+            setCategoryItems(new Map());
+          }
+
+          setProducts(liveProducts);
+          setAvailability(
+            new Map(liveAvailability.map((item) => [item.catalogItemId, item])),
+          );
+          setConnected(true);
+        })
+        .catch(() => {
+          if (stopped) return;
+          setProducts([]);
+          setAvailability(new Map());
+          setConnected(false);
+        })
+        .finally(() => {
+          if (!stopped) setLoading(false);
+        });
+
+    void load();
+
+    /**
+     * Refetch when the catalog changes, rather than on a timer.
+     *
+     * ⚠️ Debounced because one operator action can fire several events: saving a
+     * product touches the item and its stock, and a bulk import fires a burst.
+     * Without this the shop would refetch its whole catalog once per event.
+     */
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    const unsubscribe = subscribeToCatalog(client, {
+      onChange: () => {
+        if (stopped) return;
+        clearTimeout(pending);
+        pending = setTimeout(() => {
+          if (!stopped) void load();
+        }, 300);
+      },
+    });
+
+    return () => {
+      stopped = true;
+      clearTimeout(pending);
+      void unsubscribe.then((stop) => stop());
+    };
   }, []);
 
   const value = useMemo<CatalogContextValue>(
