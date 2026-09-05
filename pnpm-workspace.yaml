@@ -2,4 +2,4 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 minimumReleaseAgeExclude:
-  - '@quickengine/quick@0.2.0'
+  - '@quickengine/quick@0.2.0 || 0.2.1'
