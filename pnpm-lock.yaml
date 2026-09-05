@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@quickengine/quick':
-        specifier: ^0.2.0
-        version: 0.2.0(pusher-js@8.6.0)
+        specifier: ^0.2.1
+        version: 0.2.1(pusher-js@8.6.0)
       '@stripe/react-stripe-js':
         specifier: ^6.8.0
         version: 6.8.0(@stripe/stripe-js@9.13.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -369,8 +369,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@quickengine/quick@0.2.0':
-    resolution: {integrity: sha512-CFj0SdwkQTlzRM1vWl7DYHV5/520nqKlb8Gcj+aYZAsZaLK5ihKQpJ9whJ+bm3W5MTiVGrasr5jCogTK/8kSCA==}
+  '@quickengine/quick@0.2.1':
+    resolution: {integrity: sha512-Fucu0QaeAwSABGDn0b+kjtz4imX/bZXgFDPhGlaI3vurxwIN8KFL7mgUpCUB2boTis9KzPg1wRGF/hHuNsCk9g==}
     engines: {node: '>=18'}
     peerDependencies:
       pusher-js: '>=8'
@@ -933,7 +933,7 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.3.0':
     optional: true
 
-  '@quickengine/quick@0.2.0(pusher-js@8.6.0)':
+  '@quickengine/quick@0.2.1(pusher-js@8.6.0)':
     optionalDependencies:
       pusher-js: 8.6.0
 

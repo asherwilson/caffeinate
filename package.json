@@ -11,7 +11,7 @@
     "content:register": "tsx scripts/register-content.ts"
   },
   "dependencies": {
-    "@quickengine/quick": "^0.2.0",
+    "@quickengine/quick": "^0.2.1",
     "@stripe/react-stripe-js": "^6.8.0",
     "@stripe/stripe-js": "^9.13.0",
     "macos-cursors": "^1.1.0",
