@@ -1546,6 +1546,44 @@ body {
   object-fit: cover;
 }
 
+/* A still frame filling the same tile a photograph would, with a play badge so
+   nobody has to work out why it is not moving. */
+.store-product-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-product-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding-left: 2px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* Fills the same frame as the photograph it replaces, so a product with video
+   and a product without sit at identical heights in a row. */
+.product-detail-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .store-product p,
 .store-product h2 {
   margin: 0 0 8px;
@@ -4630,4 +4668,208 @@ body {
    the base state without touching either rule. */
 .cart-summary .cart-checkout {
   color: var(--paper);
+}
+
+/* The strip under the main viewer. Square, small, and only present when there
+   is more than one thing to choose between. */
+.product-detail-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 18px;
+}
+
+.product-detail-thumb {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  background: rgb(255 255 255 / 0.04);
+  cursor: pointer;
+}
+
+.product-detail-thumb.is-selected {
+  border-color: rgb(255 255 255 / 0.7);
+}
+
+.product-detail-thumb img,
+.product-detail-thumb video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-detail-thumb-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding-left: 1px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 8px;
+  pointer-events: none;
+}
+
+/*
+ * The media viewer.
+ *
+ * The shop's own paper colour at the same opacity the hero backdrop uses, so
+ * the page behind stays readable through it. Not a black scrim: this is still
+ * Caffeinate, and a photograph sits on paper here rather than in a void.
+ */
+/* An invisible click target over the whole frame, so the picture itself opens
+   the viewer without wrapping the Image and video in a button that would fight
+   the video's own controls. */
+.product-detail-zoom {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+/* ⚠️ Not over a video: the controls have to stay clickable, and a transparent
+   button on top would swallow every press. */
+.product-detail-image:has(video) .product-detail-zoom {
+  inset: auto 0 0 auto;
+  width: 44px;
+  height: 44px;
+  cursor: zoom-in;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.lightbox-scrim {
+  position: absolute;
+  inset: 0;
+  /*
+   * A plain div, so no button dither can reach it. Kept explicit anyway: this
+   * surface must stay flat whatever else the shop decides to texture.
+   */
+  background-image: none;
+  background-color: rgb(var(--paper-rgb) / 0.86);
+  background-image: none;
+  backdrop-filter: blur(3px);
+  cursor: zoom-out;
+}
+
+/* Nothing inside the viewer takes the page's dither, on hover or otherwise. */
+.lightbox *,
+.lightbox *::after,
+.lightbox *::before {
+  background-image: none;
+}
+
+.lightbox-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: min(92vw, 1100px);
+  max-height: 84vh;
+}
+
+.lightbox-media {
+  display: block;
+  max-width: 100%;
+  max-height: 84vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid rgb(255 255 255 / 0.14);
+}
+
+.lightbox-step {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0 0 3px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-step-prev {
+  left: -14px;
+}
+
+.lightbox-step-next {
+  right: -14px;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 6px 12px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .lightbox-step-prev {
+    left: 4px;
+  }
+
+  .lightbox-step-next {
+    right: 4px;
+  }
+}
+
+/*
+ * No dither behind the viewer.
+ *
+ * The checkerboard exists to screen an image that is part of the page. While
+ * somebody is looking at that image full size, it is just texture over the
+ * thing they asked to see clearly.
+ */
+body.lightbox-open .hero-backdrop::after,
+body.lightbox-open .product-visual::after,
+body.lightbox-open .release-image::after,
+body.lightbox-open .store-product-image::after,
+body.lightbox-open .product-detail-image::after,
+/*
+ * ⚠️ The :hover variants have to be named too. `.hero:hover .hero-backdrop`
+ * carries one more class-level term than `body.lightbox-open .hero-backdrop`,
+ * so it wins the cascade and the dither came back the moment the pointer
+ * crossed the scrim. Matching the hover selectors is what actually turns it off.
+ */
+body.lightbox-open .hero:hover .hero-backdrop::after,
+body.lightbox-open .product-visual:hover::after,
+body.lightbox-open .release-image:hover::after,
+body.lightbox-open .store-product-image:hover::after,
+body.lightbox-open .product-detail-image:hover::after {
+  display: none;
 }

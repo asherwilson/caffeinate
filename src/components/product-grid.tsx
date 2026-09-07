@@ -114,6 +114,42 @@ export function ProductGrid() {
                     sizes="(max-width: 720px) 100vw, 33vw"
                     src={product.image}
                   />
+                ) : product.video ? (
+                  /*
+                   * A product filmed but not photographed is a real case, and it
+                   * used to read NO IMAGE, which says the shop forgot something.
+                   *
+                   * ⚠️ A still, not a playing clip: `preload="metadata"` paints
+                   * the first frame without streaming, so a shop page of videos
+                   * does not open a stream per tile.
+                   */
+                  <>
+                    {/*
+                     * Plays on hover, still otherwise. A shop page where every
+                     * tile moves at once is unreadable, but a card that comes
+                     * alive under the pointer tells you it is a video without
+                     * needing to say so.
+                     *
+                     * ⚠️ `catch` on play(): a browser may refuse autoplay, and
+                     * an unhandled rejection in a hover handler is a console
+                     * full of noise for a decoration.
+                     */}
+                    <video
+                      className="store-product-video"
+                      loop
+                      muted
+                      onMouseEnter={(event) => {
+                        void event.currentTarget.play().catch(() => {});
+                      }}
+                      onMouseLeave={(event) => {
+                        event.currentTarget.pause();
+                        event.currentTarget.currentTime = 0;
+                      }}
+                      playsInline
+                      preload="metadata"
+                      src={product.video}
+                    />
+                  </>
                 ) : (
                   <div className="store-product-image-empty">NO IMAGE</div>
                 )}

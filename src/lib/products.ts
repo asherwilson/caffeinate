@@ -27,6 +27,19 @@ export type StoreProduct = {
   featured: boolean;
   /** From `metadata.images[0]`. Null renders a placeholder, never a fake photo. */
   image: string | null;
+  /**
+   * From `metadata.videos[0]`. Null is the ordinary case: most products have a
+   * photograph and no video, so nothing about the layout may depend on one
+   * being here.
+   */
+  video: string | null;
+  /**
+   * Every photograph, in the order the shop arranged them. `image` is the first
+   * of these and stays for the places that only ever want one.
+   */
+  images: string[];
+  /** Every video, same arrangement. Usually empty. */
+  videos: string[];
   name: string;
   priceCents: number;
   /**

@@ -83,6 +83,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
               featured?: unknown;
               tags?: unknown;
               images?: unknown;
+              videos?: unknown;
               compareAtPriceCents?: unknown;
             };
             /**
@@ -103,6 +104,19 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
               typeof images[0] === "string" && images[0].trim()
                 ? images[0]
                 : null;
+            /**
+             * A SEPARATE key from images, on purpose. QuickDash keeps videos in
+             * their own list so a storefront never has to guess which urls in a
+             * shared array happen to be playable, and a shop that has not been
+             * updated simply never looks at it.
+             */
+            const videos = Array.isArray(metadata.videos)
+              ? metadata.videos
+              : [];
+            const video =
+              typeof videos[0] === "string" && videos[0].trim()
+                ? videos[0]
+                : null;
             return [
               {
                 catalogItemId: item.id,
@@ -114,6 +128,15 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
                 description: item.description ?? item.name,
                 featured: metadata.featured === true,
                 image,
+                images: images.filter(
+                  (url): url is string =>
+                    typeof url === "string" && !!url.trim(),
+                ),
+                video,
+                videos: videos.filter(
+                  (url): url is string =>
+                    typeof url === "string" && !!url.trim(),
+                ),
                 name: item.name,
                 priceCents: item.priceCents,
                 roast: roastFromTags(metadata.tags),
